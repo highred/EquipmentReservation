@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Supabase Equipment Checkout",
+  "description": "A simple proof-of-concept app to check equipment in and out using a Supabase backend.",
+  "requestFramePermissions": []
+}
