@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { User, Reservation, Equipment, User as Technician, UserRole } from '../../types';
@@ -14,6 +13,21 @@ interface HoveredData {
         y: number;
     };
 }
+
+const TECHNICIAN_COLORS = [
+    'bg-blue-500', 'bg-green-500', 'bg-indigo-500', 
+    'bg-purple-500', 'bg-pink-500', 'bg-yellow-600',
+    'bg-teal-500', 'bg-red-500'
+];
+
+const getTechnicianColor = (technicianId: string) => {
+    let hash = 0;
+    for (let i = 0; i < technicianId.length; i++) {
+        hash = technicianId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash % TECHNICIAN_COLORS.length);
+    return TECHNICIAN_COLORS[index];
+};
 
 const formatDate = (date: Date, format: 'long' | 'short' | 'day' | 'month-year') => {
     if (format === 'long') return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -56,7 +70,7 @@ const getCalendarDays = (date: Date, view: ViewMode): Date[] => {
     }
 };
 
-const CalendarView: React.FC<{ currentUser: User }> = () => {
+const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => void }> = ({ onDayClick }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<ViewMode>('month');
     const [calendarDays, setCalendarDays] = useState<Date[]>(getCalendarDays(currentDate, viewMode));
@@ -117,7 +131,7 @@ const CalendarView: React.FC<{ currentUser: User }> = () => {
         return { eq, tech };
     };
     
-    const handleMouseEnter = (reservations: Reservation[], e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseEnter = (reservations: Reservation[], e: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         setHoveredData({
             reservations,
@@ -142,6 +156,7 @@ const CalendarView: React.FC<{ currentUser: User }> = () => {
                 ) : (
                     filteredReservations.map((res, index) => {
                         const { eq, tech } = getReservationDetails(res);
+                        if (!tech) return null;
                         const pickup = new Date(res.pickupDate + 'T00:00:00');
                         const ret = new Date(res.returnDate + 'T00:00:00');
                         
@@ -157,11 +172,12 @@ const CalendarView: React.FC<{ currentUser: User }> = () => {
                         if (duration <= 0) duration = 1;
 
                         return (
-                            <div
+                            <button
                                 key={res.id}
+                                onClick={() => onDayClick(formatDate(pickup, 'short'))}
                                 onMouseEnter={(e) => handleMouseEnter([res], e)}
                                 onMouseLeave={handleMouseLeave}
-                                className="col-start-1 row-start-1 mt-2 mx-1 p-2 rounded-lg text-white text-xs bg-brand-secondary hover:bg-brand-primary transition-colors cursor-pointer"
+                                className={`col-start-1 row-start-1 mt-2 mx-1 p-2 rounded-lg text-white text-xs ${getTechnicianColor(tech.id)} hover:opacity-80 transition-opacity cursor-pointer text-left`}
                                 style={{
                                     gridColumnStart: startIndex + 1,
                                     gridColumnEnd: `span ${duration}`,
@@ -171,7 +187,7 @@ const CalendarView: React.FC<{ currentUser: User }> = () => {
                             >
                                 <p className="font-bold truncate">{tech?.name || 'Technician not found'}</p>
                                 <p className="truncate">{eq?.description} for {res.company}</p>
-                            </div>
+                            </button>
                         );
                     })
                 )}
@@ -209,14 +225,15 @@ const CalendarView: React.FC<{ currentUser: User }> = () => {
                                 if (!tech) return null;
 
                                 return (
-                                    <div
+                                    <button
                                         key={techId}
+                                        onClick={() => onDayClick(formatDate(day, 'short'))}
                                         onMouseEnter={(e) => handleMouseEnter(techReservations, e)}
                                         onMouseLeave={handleMouseLeave}
-                                        className="px-1 py-0.5 text-xs text-white rounded bg-brand-accent hover:bg-brand-primary cursor-pointer truncate"
+                                        className={`w-full text-left px-1 py-0.5 text-xs text-white rounded ${getTechnicianColor(tech.id)} hover:opacity-80 transition-opacity cursor-pointer truncate`}
                                     >
                                         {tech.name}
-                                    </div>
+                                    </button>
                                 )
                             })}
                         </div>

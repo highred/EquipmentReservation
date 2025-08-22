@@ -1,4 +1,3 @@
-
 import { Equipment, Reservation, User, UserRole, StagingItem } from '../types';
 
 // --- MOCK DATA ---
@@ -224,6 +223,14 @@ class ApiService {
     async getReservationsForTechnician(technicianId: string): Promise<Reservation[]> {
         await this.simulateLatency();
         return reservations.filter(r => r.technicianId === technicianId).sort((a,b) => new Date(a.pickupDate).getTime() - new Date(b.pickupDate).getTime());
+    }
+
+    async getReservationsForEquipment(equipmentId: string): Promise<Reservation[]> {
+        await this.simulateLatency();
+        const todayStr = new Date().toISOString().split('T')[0];
+        return reservations
+            .filter(r => r.equipmentId === equipmentId && r.returnDate >= todayStr)
+            .sort((a, b) => new Date(a.pickupDate).getTime() - new Date(b.pickupDate).getTime());
     }
 
     async createReservation(newReservation: Omit<Reservation, 'id' | 'staged'>): Promise<{ success: boolean; message: string }> {

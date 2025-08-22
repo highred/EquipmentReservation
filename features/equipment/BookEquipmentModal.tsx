@@ -4,16 +4,18 @@ import { Equipment, User, Reservation, UserRole } from '../../types';
 interface BookEquipmentModalProps {
     equipment: Equipment;
     currentUser: User;
-    users: User[]; // Full list for admin
+    users: User[];
+    upcomingReservations: Reservation[];
+    initialReturnDate: string;
     onClose: () => void;
-    onSubmit: (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>) => Promise<void>;
+    onSubmit: (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string) => Promise<void>;
 }
 
-const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, currentUser, users, onClose, onSubmit }) => {
+const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, currentUser, users, upcomingReservations, initialReturnDate, onClose, onSubmit }) => {
     const today = new Date().toISOString().split('T')[0];
     const [company, setCompany] = useState('');
     const [pickupDate, setPickupDate] = useState(today);
-    const [returnDate, setReturnDate] = useState(today);
+    const [returnDate, setReturnDate] = useState(initialReturnDate);
     const [notes, setNotes] = useState('');
     const [technicianId, setTechnicianId] = useState(currentUser.id);
     const [error, setError] = useState('');
@@ -38,9 +40,11 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
             pickupDate,
             returnDate,
             notes,
-        });
+        }, returnDate);
         setIsSubmitting(false);
     };
+
+    const getTechnicianName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -51,8 +55,24 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
                 </div>
                 <div>
                     <p className="text-lg font-semibold">{equipment.description}</p>
-                    <p className="text-sm text-gray-500 mb-6">{equipment.gageId} / {equipment.manufacturer}</p>
+                    <p className="text-sm text-gray-500 mb-4">{equipment.gageId} / {equipment.manufacturer}</p>
                 </div>
+
+                <div className="bg-gray-50 p-3 rounded-md mb-6">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Upcoming Schedule</h4>
+                    {upcomingReservations.length > 0 ? (
+                        <div className="max-h-24 overflow-y-auto space-y-1 text-xs">
+                            {upcomingReservations.map(res => (
+                                <div key={res.id} className="text-gray-600">
+                                    <span className="font-semibold">{getTechnicianName(res.technicianId)}:</span> {new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()} to {new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-500 italic">This equipment is fully available.</p>
+                    )}
+                </div>
+
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         {currentUser.role === UserRole.ADMIN && (
@@ -65,7 +85,7 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
                                     required 
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"
                                 >
-                                    {users.filter(u => u.role === UserRole.TECHNICIAN).map(tech => (
+                                    {users.filter(u => u.role === UserRole.TECHNICIAN || u.role === UserRole.ADMIN).map(tech => (
                                         <option key={tech.id} value={tech.id}>{tech.name}</option>
                                     ))}
                                 </select>

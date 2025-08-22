@@ -22,6 +22,7 @@ const App: React.FC = () => {
     const [viewAsUser, setViewAsUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('CALENDAR');
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedDateForTechView, setSelectedDateForTechView] = useState<string | null>(null);
 
     const loggedInUser = currentUser;
     const effectiveUser = viewAsUser || currentUser;
@@ -56,8 +57,14 @@ const App: React.FC = () => {
 
     const handleTabChange = (tab: Tab) => {
         setActiveTab(tab);
+        setSelectedDateForTechView(null); // Reset date filter when changing tabs
     };
     
+    const handleCalendarDayClick = (date: string) => {
+        setSelectedDateForTechView(date);
+        setActiveTab('TECHNICIAN');
+    };
+
     const handleUserChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedUser = allUsers.find(u => u.id === event.target.value);
         if (selectedUser) {
@@ -92,15 +99,15 @@ const App: React.FC = () => {
 
         switch (activeTab) {
             case 'CALENDAR':
-                return <CalendarView currentUser={effectiveUser} />;
+                return <CalendarView currentUser={effectiveUser} onDayClick={handleCalendarDayClick} />;
             case 'EQUIPMENT':
                 return <EquipmentView currentUser={effectiveUser} />;
             case 'TECHNICIAN':
-                return <TechnicianView currentUser={effectiveUser} />;
+                return <TechnicianView currentUser={effectiveUser} selectedDate={selectedDateForTechView} onClearDateFilter={() => setSelectedDateForTechView(null)} />;
             case 'ADMIN':
                 return <AdminView currentUser={effectiveUser} onUsersUpdate={handleUsersUpdate} />;
             default:
-                return <CalendarView currentUser={effectiveUser} />;
+                return <CalendarView currentUser={effectiveUser} onDayClick={handleCalendarDayClick} />;
         }
     };
 

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Reservation, Equipment, UserRole } from '../../types';
 import { apiService } from '../../services/apiService';
 import { PencilIcon, TrashIcon } from '../../components/icons/Icons';
@@ -49,7 +49,7 @@ const ReservationCard: React.FC<{
     );
 }
 
-const TechnicianView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
+const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null; onClearDateFilter: () => void; }> = ({ currentUser, selectedDate, onClearDateFilter }) => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -128,23 +128,42 @@ const TechnicianView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
     const getEquipmentById = (id: string) => equipment.find(e => e.id === id);
 
+    const displayedReservations = useMemo(() => {
+        if (!selectedDate) {
+            return reservations;
+        }
+        const filterDate = new Date(selectedDate + 'T00:00:00');
+        filterDate.setHours(0,0,0,0);
+        return reservations.filter(r => {
+            const pickup = new Date(r.pickupDate + 'T00:00:00');
+            const ret = new Date(r.returnDate + 'T00:00:00');
+            pickup.setHours(0,0,0,0);
+            ret.setHours(0,0,0,0);
+            return filterDate >= pickup && filterDate <= ret;
+        });
+    }, [reservations, selectedDate]);
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const upcomingReservations = reservations.filter(r => new Date(r.returnDate) >= today);
-    const pastReservations = reservations.filter(r => new Date(r.returnDate) < today);
+    const upcomingReservations = displayedReservations.filter(r => new Date(r.returnDate) >= today);
+    const pastReservations = displayedReservations.filter(r => new Date(r.returnDate) < today);
     
     const renderContent = () => {
         if (loading) {
             return <div className="text-center text-gray-500">Loading reservations...</div>;
         }
 
-        if (!selectedTechId && currentUser.role === UserRole.ADMIN) {
+        if (!selectedTechId && currentUser.role === UserRole.ADMIN && !selectedDate) {
             return <div className="text-center text-gray-500 bg-white p-8 rounded-lg shadow-md">Please select a technician to view their reservations.</div>;
         }
         
-        if (reservations.length === 0) {
-            return <div className="text-center text-gray-500 bg-white p-8 rounded-lg shadow-md">No reservations found for this technician.</div>;
+        if (displayedReservations.length === 0) {
+            return <div className="text-center text-gray-500 bg-white p-8 rounded-lg shadow-md">
+                {selectedDate 
+                    ? `No reservations found for this date.`
+                    : 'No reservations found for this technician.'}
+            </div>;
         }
 
         return (
@@ -182,6 +201,17 @@ const TechnicianView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
              {notification && (
                 <div className={`p-4 mb-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {notification.message}
+                </div>
+            )}
+            {selectedDate && (
+                <div className="bg-blue-50 border-l-4 border-brand-accent p-4 rounded-r-lg flex justify-between items-center">
+                    <div>
+                        <h3 className="font-bold text-lg text-gray-800">Showing Reservations for {new Date(selectedDate + 'T00:00:00').toLocaleDateString()}</h3>
+                        <p className="text-sm text-gray-600">This list is filtered by a date selection from the calendar.</p>
+                    </div>
+                    <button onClick={onClearDateFilter} className="bg-white text-brand-primary font-semibold py-2 px-4 border border-brand-accent rounded-md hover:bg-brand-light transition-colors">
+                        Show All
+                    </button>
                 </div>
             )}
             {currentUser.role === UserRole.ADMIN && (

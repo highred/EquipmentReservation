@@ -15,7 +15,9 @@ const EquipmentCard: React.FC<{
     onClone: () => void;
     onDelete: () => void;
 }> = ({ equipment, currentUser, onBook, onEdit, onClone, onDelete }) => {
-    const isDueSoon = new Date(equipment.dueDate) < new Date();
+    const isCalExpired = new Date(equipment.dueDate) < new Date();
+    const canTechnicianBook = !(currentUser.role === UserRole.TECHNICIAN && isCalExpired);
+
     return (
         <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
             <div className="p-5 flex-grow">
@@ -31,7 +33,7 @@ const EquipmentCard: React.FC<{
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="font-semibold">Cal. Due:</span>
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${isDueSoon ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${isCalExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                             {new Date(equipment.dueDate).toLocaleDateString()}
                         </span>
                     </div>
@@ -40,7 +42,9 @@ const EquipmentCard: React.FC<{
             <div className="bg-gray-50 p-4 flex items-center justify-between">
                 <button
                     onClick={onBook}
-                    className="flex-grow bg-brand-secondary text-white font-bold py-2 px-4 rounded-md hover:bg-brand-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent"
+                    disabled={!canTechnicianBook}
+                    title={!canTechnicianBook ? 'Cannot book: Calibration is expired.' : 'Book this equipment'}
+                    className="flex-grow bg-brand-secondary text-white font-bold py-2 px-4 rounded-md hover:bg-brand-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                     Book Now
                 </button>
@@ -75,8 +79,10 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     
     const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
     const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
+    const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([]);
 
     const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
+    const [lastReturnDate, setLastReturnDate] = useState<string>(new Date().toISOString().split('T')[0]);
     
     const fetchEquipment = useCallback(async () => {
         setLoading(true);
@@ -87,10 +93,8 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
     useEffect(() => {
         fetchEquipment();
-        if (currentUser.role === UserRole.ADMIN) {
-            apiService.getUsers().then(setUsers);
-        }
-    }, [fetchEquipment, currentUser.role]);
+        apiService.getUsers().then(setUsers);
+    }, [fetchEquipment]);
 
     const filteredEquipment = useMemo(() => {
         return equipmentList.filter(eq =>
@@ -118,7 +122,9 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     };
 
     // Booking Modal Handlers
-    const handleBook = (equipment: Equipment) => {
+    const handleBook = async (equipment: Equipment) => {
+        const reservations = await apiService.getReservationsForEquipment(equipment.id);
+        setUpcomingReservations(reservations);
         setSelectedEquipment(equipment);
         setIsBookingModalOpen(true);
     };
@@ -126,9 +132,10 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const handleCloseBookingModal = () => {
         setIsBookingModalOpen(false);
         setSelectedEquipment(null);
+        setUpcomingReservations([]);
     };
 
-    const handleBookingSubmit = async (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>) => {
+    const handleBookingSubmit = async (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string) => {
         if (!selectedEquipment) return;
 
         const result = await apiService.createReservation({
@@ -138,6 +145,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
         showNotification(result.success ? 'success' : 'error', result.message);
         if (result.success) {
+            setLastReturnDate(returnDate);
             handleCloseBookingModal();
         }
     };
@@ -276,6 +284,8 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     equipment={selectedEquipment}
                     currentUser={currentUser}
                     users={users}
+                    upcomingReservations={upcomingReservations}
+                    initialReturnDate={lastReturnDate}
                     onClose={handleCloseBookingModal}
                     onSubmit={handleBookingSubmit}
                 />
