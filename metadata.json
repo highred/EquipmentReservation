@@ -1,0 +1,5 @@
+{
+  "name": "ATI Equipment Reservation - Wired to Backend",
+  "description": "A world-class Equipment Reservation System for tracking and managing equipment bookings, technician schedules, and administrative staging under the ATI brand. This application provides a seamless interface for booking equipment, viewing reservation calendars, and managing daily logistics.",
+  "requestFramePermissions": []
+}
