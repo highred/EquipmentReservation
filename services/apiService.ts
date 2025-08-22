@@ -2,31 +2,31 @@ import { Equipment, Reservation, User, UserRole, StagingItem, Company } from '..
 
 // --- MOCK DATA ---
 let users: User[] = [
-    { id: 'user-1', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN, password: 'password' },
-    { id: 'user-2', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
-    { id: 'user-3', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
+    { id: '11111111-1111-1111-1111-111111111111', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN, password: 'password' },
+    { id: '22222222-2222-2222-2222-222222222222', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
+    { id: '33333333-3333-3333-3333-333333333333', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
 ];
 
 let companies: Company[] = [
-    { id: 'comp-1', name: 'Global Tech Inc.' },
-    { id: 'comp-2', name: 'Innovate Solutions' },
-    { id: 'comp-3', name: 'Future Systems' },
+    { id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef', name: 'Global Tech Inc.' },
+    { id: 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', name: 'Innovate Solutions' },
+    { id: 'c3d4e5f6-a7b8-9012-3456-7890abcdef01', name: 'Future Systems' },
 ];
 
 let equipment: Equipment[] = [
-    { id: 'eq-1', gageId: 'G-1001', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts', dueDate: '2025-08-15' },
-    { id: 'eq-2', gageId: 'G-1002', description: 'Oscilloscope', manufacturer: 'Tektronix', model: 'TBS1052B', range: '50 MHz', uom: 'MHz', dueDate: '2025-06-20' },
-    { id: 'eq-3', gageId: 'G-1003', description: 'Calipers', manufacturer: 'Mitutoyo', model: 'CD-6" ASX', range: '6 inch', uom: 'in', dueDate: '2024-12-01' },
-    { id: 'eq-4', gageId: 'G-2001', description: 'Power Supply', manufacturer: 'Keysight', model: 'E3631A', range: '0-6V/0-25V', uom: 'V/A', dueDate: '2025-02-10' },
-    { id: 'eq-5', gageId: 'G-2002', description: 'Torque Wrench', manufacturer: 'Snap-on', model: 'TECH2FR100', range: '5-100 ft-lb', uom: 'ft-lb', dueDate: '2024-11-22' },
-    { id: 'eq-6', gageId: 'G-3001', description: 'Infrared Thermometer', manufacturer: 'Flir', model: 'TG165', range: '-25 to 380°C', uom: '°C', dueDate: '2025-09-05' },
-    { id: 'eq-7', gageId: 'G-1004', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts', dueDate: '2025-08-15' },
+    { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', gageId: 'G-1001', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts', dueDate: '2025-08-15' },
+    { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', gageId: 'G-1002', description: 'Oscilloscope', manufacturer: 'Tektronix', model: 'TBS1052B', range: '50 MHz', uom: 'MHz', dueDate: '2025-06-20' },
+    { id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', gageId: 'G-1003', description: 'Calipers', manufacturer: 'Mitutoyo', model: 'CD-6" ASX', range: '6 inch', uom: 'in', dueDate: '2024-12-01' },
+    { id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', gageId: 'G-2001', description: 'Power Supply', manufacturer: 'Keysight', model: 'E3631A', range: '0-6V/0-25V', uom: 'V/A', dueDate: '2025-02-10' },
+    { id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', gageId: 'G-2002', description: 'Torque Wrench', manufacturer: 'Snap-on', model: 'TECH2FR100', range: '5-100 ft-lb', uom: 'ft-lb', dueDate: '2024-11-22' },
+    { id: 'ffffffff-ffff-ffff-ffff-ffffffffffff', gageId: 'G-3001', description: 'Infrared Thermometer', manufacturer: 'Flir', model: 'TG165', range: '-25 to 380°C', uom: '°C', dueDate: '2025-09-05' },
+    { id: 'gggggggg-gggg-gggg-gggg-gggggggggggg', gageId: 'G-1004', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts', dueDate: '2025-08-15' },
 ];
 
 let reservations: Reservation[] = [
-    { id: 'res-1', equipmentId: 'eq-1', technicianId: 'user-2', companyId: 'comp-1', pickupDate: '2024-07-28', returnDate: '2024-07-30', notes: 'Need all probes included.', staged: true },
-    { id: 'res-2', equipmentId: 'eq-3', technicianId: 'user-3', companyId: 'comp-2', pickupDate: '2024-07-29', returnDate: '2024-08-02', notes: 'Please verify calibration cert.', staged: false },
-    { id: 'res-3', equipmentId: 'eq-2', technicianId: 'user-2', companyId: 'comp-1', pickupDate: '2024-08-05', returnDate: '2024-08-09', notes: '', staged: false },
+    { id: 'd1d1d1d1-d1d1-d1d1-d1d1-d1d1d1d1d1d1', equipmentId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', technicianId: '22222222-2222-2222-2222-222222222222', companyId: 'a1b2c3d4-e5f6-7890-1234-567890abcdef', pickupDate: '2024-07-28', returnDate: '2024-07-30', notes: 'Need all probes included.', staged: true },
+    { id: 'e2e2e2e2-e2e2-e2e2-e2e2-e2e2e2e2e2e2', equipmentId: 'cccccccc-cccc-cccc-cccc-cccccccccccc', technicianId: '33333333-3333-3333-3333-333333333333', companyId: 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', pickupDate: '2024-07-29', returnDate: '2024-08-02', notes: 'Please verify calibration cert.', staged: false },
+    { id: 'f3f3f3f3-f3f3-f3f3-f3f3-f3f3f3f3f3f3', equipmentId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', technicianId: '22222222-2222-2222-2222-222222222222', companyId: 'a1b2c3d4-e5f6-7890-1234-567890abcdef', pickupDate: '2024-08-05', returnDate: '2024-08-09', notes: '', staged: false },
 ];
 
 const today = new Date();
@@ -36,7 +36,10 @@ const nextWeek = new Date(today);
 nextWeek.setDate(nextWeek.getDate() + 7);
 
 reservations.push({
-    id: 'res-4', equipmentId: 'eq-4', technicianId: 'user-3', companyId: 'comp-3',
+    id: '44444444-4444-4444-4444-444444444444', 
+    equipmentId: 'dddddddd-dddd-dddd-dddd-dddddddddddd', 
+    technicianId: '33333333-3333-3333-3333-333333333333', 
+    companyId: 'c3d4e5f6-a7b8-9012-3456-7890abcdef01',
     pickupDate: tomorrow.toISOString().split('T')[0],
     returnDate: nextWeek.toISOString().split('T')[0],
     notes: 'Critical project, requires immediate staging.', staged: false
@@ -87,7 +90,7 @@ class ApiService {
             return { success: false, message: `User with email "${userData.email}" already exists.` };
         }
         const newUser: User = {
-            id: `user-${Date.now()}`,
+            id: crypto.randomUUID(),
             ...userData,
             password: '', 
         };
@@ -142,7 +145,7 @@ class ApiService {
             return { success: false, message: `Company with name "${companyData.name}" already exists.` };
         }
         const newCompany: Company = {
-            id: `comp-${Date.now()}`,
+            id: crypto.randomUUID(),
             ...companyData,
         };
         companies.push(newCompany);
@@ -191,7 +194,7 @@ class ApiService {
                 updatedCount++;
             } else {
                 // Create
-                const newCompany: Company = { id: `comp-${Date.now()}-${Math.random()}`, name: item.name };
+                const newCompany: Company = { id: crypto.randomUUID(), name: item.name };
                 companies.push(newCompany);
                 createdCount++;
             }
@@ -213,7 +216,7 @@ class ApiService {
             return { success: false, message: `Gage ID "${newEquipmentData.gageId}" already exists.` };
         }
         const newEquipment: Equipment = {
-          id: `eq-${Date.now()}`,
+          id: crypto.randomUUID(),
           ...newEquipmentData,
         };
         equipment.push(newEquipment);
@@ -243,7 +246,7 @@ class ApiService {
                 equipment[existingEquipmentIndex] = { ...existingEquipment, ...item, gageId: existingEquipment.gageId };
                 updatedCount++;
             } else {
-                const newEquipment: Equipment = { id: `eq-${Date.now()}-${Math.random()}`, ...item };
+                const newEquipment: Equipment = { id: crypto.randomUUID(), ...item };
                 equipment.push(newEquipment);
                 createdCount++;
             }
@@ -315,7 +318,7 @@ class ApiService {
         }
         const reservation: Reservation = {
             ...newReservation,
-            id: `res-${Date.now()}`,
+            id: crypto.randomUUID(),
             staged: false,
         };
         reservations.push(reservation);
