@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { User, UserRole, Tab } from './types';
 import { apiService } from './services/apiService';
 import Layout from './components/Layout';
@@ -16,11 +16,26 @@ const TABS: { id: Tab; label: string; roles: UserRole[] }[] = [
 ];
 
 const App: React.FC = () => {
-    const [users] = useState<User[]>(apiService.getUsers());
-    const [currentUser, setCurrentUser] = useState<User>(users[0]); // Default to Admin
+    const [users, setUsers] = useState<User[]>([]);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('CALENDAR');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            const fetchedUsers = await apiService.getUsers();
+            setUsers(fetchedUsers);
+            if (fetchedUsers.length > 0) {
+                // Default to first user, assumed to be an admin
+                setCurrentUser(fetchedUsers[0]);
+            }
+            setIsLoading(false);
+        };
+        loadInitialData();
+    }, []);
 
     const availableTabs = useMemo(() => {
+        if (!currentUser) return [];
         return TABS.filter(tab => tab.roles.includes(currentUser.role));
     }, [currentUser]);
 
@@ -40,7 +55,20 @@ const App: React.FC = () => {
         }
     };
 
+    const handleUsersUpdate = async () => {
+        const updatedUsers = await apiService.getUsers();
+        setUsers(updatedUsers);
+        // Ensure currentUser is still valid
+        if (currentUser && !updatedUsers.some(u => u.id === currentUser.id)) {
+            setCurrentUser(updatedUsers.length > 0 ? updatedUsers[0] : null);
+        }
+    }
+
     const renderContent = () => {
+        if (!currentUser) {
+            return <div className="text-center p-8">No user selected or available.</div>;
+        }
+
         switch (activeTab) {
             case 'CALENDAR':
                 return <CalendarView currentUser={currentUser} />;
@@ -49,11 +77,19 @@ const App: React.FC = () => {
             case 'TECHNICIAN':
                 return <TechnicianView currentUser={currentUser} />;
             case 'ADMIN':
-                return <AdminView currentUser={currentUser} />;
+                return <AdminView currentUser={currentUser} onUsersUpdate={handleUsersUpdate} />;
             default:
                 return <CalendarView currentUser={currentUser} />;
         }
     };
+
+    if (isLoading || !currentUser) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-xl font-semibold">Loading Application...</div>
+            </div>
+        );
+    }
 
     return (
         <Layout 

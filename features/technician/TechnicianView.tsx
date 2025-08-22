@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Reservation, Equipment, UserRole } from '../../types';
 import { apiService } from '../../services/apiService';
@@ -57,9 +58,9 @@ const TechnicianView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-    const fetchTechnicians = useCallback(() => {
+    const fetchTechnicians = useCallback(async () => {
         if (currentUser.role === UserRole.ADMIN) {
-            const allUsers = apiService.getUsers();
+            const allUsers = await apiService.getUsers();
             const techUsers = allUsers.filter(u => u.role === UserRole.TECHNICIAN);
             setTechnicians(techUsers);
             if (techUsers.length > 0 && !selectedTechId) {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 type IconProps = {
@@ -21,6 +22,13 @@ export const UserIcon: React.FC<IconProps> = ({ className }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
     </svg>
 );
+
+export const UserGroupIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.952a4.5 4.5 0 014.5 0m-4.5 0a4.5 4.5 0 00-4.5 0m3.75 4.5A3.75 3.75 0 019 15.125m0 0A3.75 3.75 0 0112.75 12m0 0A3.75 3.75 0 0116.5 15.125m-3.75 0h.008v.008h-.008v-.008zM12 15.125a3.75 3.75 0 01-3.75 0m3.75 0a3.75 3.75 0 003.75 0M9 12a4.5 4.5 0 014.5-4.5m0 0a4.5 4.5 0 014.5 4.5m-9 0a4.5 4.5 0 00-4.5 4.5m9-4.5a4.5 4.5 0 01-4.5 4.5" />
+    </svg>
+);
+
 
 export const CogIcon: React.FC<IconProps> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>

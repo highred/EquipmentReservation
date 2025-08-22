@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User, Equipment, Reservation, UserRole } from '../../types';
 import { apiService } from '../../services/apiService';
@@ -87,7 +88,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     useEffect(() => {
         fetchEquipment();
         if (currentUser.role === UserRole.ADMIN) {
-            setUsers(apiService.getUsers());
+            apiService.getUsers().then(setUsers);
         }
     }, [fetchEquipment, currentUser.role]);
 

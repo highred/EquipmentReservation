@@ -1,10 +1,11 @@
+
 import { Equipment, Reservation, User, UserRole, StagingItem } from '../types';
 
 // --- MOCK DATA ---
-const users: User[] = [
-    { id: 'user-1', name: 'Mike Smith (Admin)', role: UserRole.ADMIN },
-    { id: 'user-2', name: 'Bob (Technician)', role: UserRole.TECHNICIAN },
-    { id: 'user-3', name: 'Charlie (Technician)', role: UserRole.TECHNICIAN },
+let users: User[] = [
+    { id: 'user-1', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN },
+    { id: 'user-2', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN },
+    { id: 'user-3', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN },
 ];
 
 let equipment: Equipment[] = [
@@ -44,10 +45,50 @@ class ApiService {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    getUsers(): User[] {
-        return users;
+    // --- User Management ---
+    async getUsers(): Promise<User[]> {
+        await this.simulateLatency(200);
+        return [...users];
     }
 
+    async addUser(userData: Omit<User, 'id'>): Promise<{ success: boolean; message: string; user?: User }> {
+        await this.simulateLatency();
+        if (users.some(u => u.email && u.email.toLowerCase() === userData.email?.toLowerCase())) {
+            return { success: false, message: `User with email "${userData.email}" already exists.` };
+        }
+        const newUser: User = {
+            id: `user-${Date.now()}`,
+            ...userData
+        };
+        users.push(newUser);
+        return { success: true, message: "User added successfully.", user: newUser };
+    }
+
+    async updateUser(updatedUser: User): Promise<{ success: boolean; message: string }> {
+        await this.simulateLatency();
+        const index = users.findIndex(u => u.id === updatedUser.id);
+        if (index > -1) {
+            if (users.some(u => u.id !== updatedUser.id && u.email && u.email.toLowerCase() === updatedUser.email?.toLowerCase())) {
+                return { success: false, message: `Another user with email "${updatedUser.email}" already exists.` };
+            }
+            users[index] = updatedUser;
+            return { success: true, message: "User updated successfully." };
+        }
+        return { success: false, message: "Could not find user to update." };
+    }
+
+    async deleteUser(userId: string): Promise<{ success: boolean, message: string }> {
+        await this.simulateLatency();
+        // Prevent deleting a user who has reservations
+        if (reservations.some(r => r.technicianId === userId)) {
+            return { success: false, message: "Cannot delete user with active reservations. Please reassign their reservations first." };
+        }
+        const initialLength = users.length;
+        users = users.filter(u => u.id !== userId);
+        return { success: users.length < initialLength, message: users.length < initialLength ? "User deleted." : "User not found." };
+    }
+
+    // --- Equipment Management ---
     async getEquipment(): Promise<Equipment[]> {
         await this.simulateLatency();
         return [...equipment];
@@ -126,6 +167,7 @@ class ApiService {
         return { success: equipment.length < initialLength };
     }
     
+    // --- Reservation Management ---
     async getReservations(startDate?: string, endDate?: string): Promise<Reservation[]> {
         await this.simulateLatency();
         if(!startDate || !endDate) return [...reservations];
@@ -212,13 +254,15 @@ class ApiService {
         return { success: reservations.length < initialLength };
     }
 
+    // --- Admin / Staging ---
     async getStagingList(date: string): Promise<StagingItem[]> {
         await this.simulateLatency();
+        const userList = await this.getUsers();
         const items = reservations
             .filter(r => r.pickupDate === date)
             .map(r => {
                 const eq = equipment.find(e => e.id === r.equipmentId);
-                const user = users.find(u => u.id === r.technicianId);
+                const user = userList.find(u => u.id === r.technicianId);
                 return { ...r, equipment: eq!, user: user! };
             })
             .filter(item => item.equipment && item.user)
