@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Equipment, User, Reservation, UserRole } from '../../types';
 
@@ -6,14 +7,15 @@ interface BookEquipmentModalProps {
     currentUser: User;
     users: User[];
     upcomingReservations: Reservation[];
+    initialCompany: string;
     initialReturnDate: string;
     onClose: () => void;
-    onSubmit: (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string) => Promise<void>;
+    onSubmit: (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string) => Promise<{ success: boolean; message: string; }>;
 }
 
-const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, currentUser, users, upcomingReservations, initialReturnDate, onClose, onSubmit }) => {
+const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, currentUser, users, upcomingReservations, initialCompany, initialReturnDate, onClose, onSubmit }) => {
     const today = new Date().toISOString().split('T')[0];
-    const [company, setCompany] = useState('');
+    const [company, setCompany] = useState(initialCompany);
     const [pickupDate, setPickupDate] = useState(today);
     const [returnDate, setReturnDate] = useState(initialReturnDate);
     const [notes, setNotes] = useState('');
@@ -34,7 +36,7 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
         }
         
         setIsSubmitting(true);
-        await onSubmit({
+        const result = await onSubmit({
             technicianId,
             company,
             pickupDate,
@@ -42,6 +44,10 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
             notes,
         }, returnDate);
         setIsSubmitting(false);
+
+        if (!result.success) {
+            setError(result.message);
+        }
     };
 
     const getTechnicianName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';

@@ -83,6 +83,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
     const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
     const [lastReturnDate, setLastReturnDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [lastCompany, setLastCompany] = useState<string>('');
     
     const fetchEquipment = useCallback(async () => {
         setLoading(true);
@@ -135,19 +136,24 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         setUpcomingReservations([]);
     };
 
-    const handleBookingSubmit = async (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string) => {
-        if (!selectedEquipment) return;
+    const handleBookingSubmit = async (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string): Promise<{ success: boolean; message: string; }> => {
+        if (!selectedEquipment) {
+            return { success: false, message: 'No equipment selected.' };
+        }
 
         const result = await apiService.createReservation({
             ...reservation,
             equipmentId: selectedEquipment.id,
         });
 
-        showNotification(result.success ? 'success' : 'error', result.message);
         if (result.success) {
+            showNotification('success', result.message);
             setLastReturnDate(returnDate);
+            setLastCompany(reservation.company);
             handleCloseBookingModal();
         }
+        
+        return result;
     };
 
     // Equipment Form Modal Handlers (Add/Edit/Clone)
@@ -285,6 +291,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     currentUser={currentUser}
                     users={users}
                     upcomingReservations={upcomingReservations}
+                    initialCompany={lastCompany}
                     initialReturnDate={lastReturnDate}
                     onClose={handleCloseBookingModal}
                     onSubmit={handleBookingSubmit}
