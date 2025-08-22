@@ -15,7 +15,6 @@ const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({ equipment, onCl
         model: '',
         range: '',
         uom: '',
-        dueDate: new Date().toISOString().split('T')[0],
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,10 +81,6 @@ const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({ equipment, onCl
                         <div>
                             <label htmlFor="uom" className="block text-sm font-medium text-gray-700">Unit of Measurement (UOM)</label>
                             <input type="text" name="uom" value={formData.uom || ''} onChange={handleChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"/>
-                        </div>
-                        <div>
-                            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">Calibration Due Date</label>
-                            <input type="date" name="dueDate" value={formData.dueDate || ''} onChange={handleChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"/>
                         </div>
                     </div>
 

@@ -7,7 +7,6 @@ export interface Equipment {
   model: string;
   range: string;
   uom: string; // Unit of Measurement
-  dueDate: string; // Calibration due date
 }
 
 export interface Company {

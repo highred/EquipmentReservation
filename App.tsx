@@ -54,9 +54,9 @@ const App: React.FC = () => {
     };
 
     const availableTabs = useMemo(() => {
-        if (!loggedInUser) return [];
-        return TABS.filter(tab => tab.roles.includes(loggedInUser.role));
-    }, [loggedInUser]);
+        if (!effectiveUser) return [];
+        return TABS.filter(tab => tab.roles.includes(effectiveUser.role));
+    }, [effectiveUser]);
 
     const handleTabChange = (tab: Tab) => {
         setActiveTab(tab);
@@ -72,13 +72,9 @@ const App: React.FC = () => {
         const selectedUser = allUsers.find(u => u.id === event.target.value);
         if (selectedUser) {
             setViewAsUser(selectedUser);
-            if (loggedInUser?.role === UserRole.ADMIN && selectedUser.role === UserRole.TECHNICIAN) {
-                // do nothing to the tabs
-            } else {
-                 const newAvailableTabs = TABS.filter(tab => tab.roles.includes(selectedUser.role));
-                if (!newAvailableTabs.some(t => t.id === activeTab)) {
-                    setActiveTab(newAvailableTabs[0].id);
-                }
+            const newAvailableTabs = TABS.filter(tab => tab.roles.includes(selectedUser.role));
+            if (!newAvailableTabs.some(t => t.id === activeTab)) {
+                setActiveTab(newAvailableTabs[0].id);
             }
         }
     };
@@ -109,6 +105,7 @@ const App: React.FC = () => {
             case 'COMPANY':
                 return <CompanyView currentUser={effectiveUser} />;
             case 'ADMIN':
+                if (loggedInUser?.role !== UserRole.ADMIN) return null; // Defensive check
                 return <AdminView currentUser={effectiveUser} onDataUpdate={handleDataUpdate} />;
             default:
                 return <CalendarView currentUser={effectiveUser} onDayClick={handleCalendarDayClick} />;

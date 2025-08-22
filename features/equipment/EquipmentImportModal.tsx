@@ -8,7 +8,7 @@ interface EquipmentImportModalProps {
     onImportComplete: (result: { createdCount: number; updatedCount: number; errors: any[] }) => void;
 }
 
-const REQUIRED_HEADERS = ['gageId', 'description', 'manufacturer', 'model', 'range', 'uom', 'dueDate'];
+const REQUIRED_HEADERS = ['gageId', 'description', 'manufacturer', 'model', 'range', 'uom'];
 
 const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, onImportComplete }) => {
     const [file, setFile] = useState<File | null>(null);
@@ -97,7 +97,6 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
                             <li>If a <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> in the file matches an existing item, its details will be updated.</li>
                             <li>If a <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> does not exist, a new equipment item will be created.</li>
                             <li>Your CSV file must contain the following headers: <code className="text-xs bg-gray-200 p-1 rounded">{REQUIRED_HEADERS.join(', ')}</code></li>
-                            <li>The <code className="text-xs bg-gray-200 p-1 rounded">dueDate</code> should be in YYYY-MM-DD format.</li>
                             <li>
                                 <button onClick={handleDownloadTemplate} className="text-brand-primary hover:underline font-semibold">
                                     Download Template

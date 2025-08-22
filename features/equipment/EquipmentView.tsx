@@ -15,9 +15,6 @@ const EquipmentCard: React.FC<{
     onClone: () => void;
     onDelete: () => void;
 }> = ({ equipment, currentUser, onBook, onEdit, onClone, onDelete }) => {
-    const isCalExpired = new Date(equipment.dueDate) < new Date();
-    const canTechnicianBook = !(currentUser.role === UserRole.TECHNICIAN && isCalExpired);
-
     return (
         <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
             <div className="p-5 flex-grow">
@@ -31,20 +28,13 @@ const EquipmentCard: React.FC<{
                         <span className="font-semibold">Range:</span>
                         <span>{equipment.range} {equipment.uom}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                        <span className="font-semibold">Cal. Due:</span>
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${isCalExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                            {new Date(equipment.dueDate + 'T00:00:00').toLocaleDateString()}
-                        </span>
-                    </div>
                 </div>
             </div>
             <div className="bg-gray-50 p-4 flex items-center justify-between">
                 <button
                     onClick={onBook}
-                    disabled={!canTechnicianBook}
-                    title={!canTechnicianBook ? 'Cannot book: Calibration is expired.' : 'Book this equipment'}
-                    className="flex-grow bg-brand-secondary text-white font-bold py-2 px-4 rounded-md hover:bg-brand-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    title={'Book this equipment'}
+                    className="flex-grow bg-brand-secondary text-white font-bold py-2 px-4 rounded-md hover:bg-brand-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent"
                 >
                     Book Now
                 </button>
