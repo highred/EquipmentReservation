@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User, Equipment, Reservation, UserRole, Company } from '../../types';
 import { apiService } from '../../services/apiService';
 import BookEquipmentModal from './BookEquipmentModal';
+import BatchBookEquipmentModal from './BatchBookEquipmentModal';
 import EquipmentFormModal from './EquipmentFormModal';
 import EquipmentImportModal from './EquipmentImportModal';
 import { PencilIcon, TrashIcon, PlusIcon, CloneIcon, UploadIcon } from '../../components/icons/Icons';
@@ -14,9 +14,22 @@ const EquipmentCard: React.FC<{
     onEdit: () => void;
     onClone: () => void;
     onDelete: () => void;
-}> = ({ equipment, currentUser, onBook, onEdit, onClone, onDelete }) => {
+    isBatchMode: boolean;
+    isSelected: boolean;
+    onSelectToggle: () => void;
+}> = ({ equipment, currentUser, onBook, onEdit, onClone, onDelete, isBatchMode, isSelected, onSelectToggle }) => {
     return (
-        <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
+        <div
+            className={`relative bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${isBatchMode ? 'cursor-pointer' : ''} ${isSelected ? 'ring-2 ring-brand-primary' : ''}`}
+            onClick={isBatchMode ? onSelectToggle : undefined}
+            role={isBatchMode ? 'checkbox' : undefined}
+            aria-checked={isBatchMode ? isSelected : undefined}
+        >
+            {isBatchMode && (
+                <div className={`absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-brand-primary' : 'bg-white border-2 border-gray-300'}`}>
+                    {isSelected && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                </div>
+            )}
             <div className="p-5 flex-grow">
                 <div className="flex justify-between items-start">
                     <h3 className="text-lg font-bold text-gray-800">{equipment.description}</h3>
@@ -30,28 +43,30 @@ const EquipmentCard: React.FC<{
                     </div>
                 </div>
             </div>
-            <div className="bg-gray-50 p-4 flex items-center justify-between">
-                <button
-                    onClick={onBook}
-                    title={'Book this equipment'}
-                    className="flex-grow bg-brand-secondary text-white font-bold py-2 px-4 rounded-md hover:bg-brand-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent"
-                >
-                    Book Now
-                </button>
-                {currentUser.role === UserRole.ADMIN && (
-                    <div className="flex items-center space-x-2 ml-3">
-                        <button onClick={onClone} className="p-2 text-gray-500 hover:text-brand-secondary transition-colors" aria-label="Clone Equipment">
-                            <CloneIcon className="w-5 h-5" />
-                        </button>
-                        <button onClick={onEdit} className="p-2 text-gray-500 hover:text-brand-primary transition-colors" aria-label="Edit Equipment">
-                            <PencilIcon className="w-5 h-5" />
-                        </button>
-                        <button onClick={onDelete} className="p-2 text-gray-500 hover:text-status-danger transition-colors" aria-label="Delete Equipment">
-                            <TrashIcon className="w-5 h-5" />
-                        </button>
-                    </div>
-                )}
-            </div>
+            {!isBatchMode && (
+                <div className="bg-gray-50 p-4 flex items-center justify-between">
+                    <button
+                        onClick={onBook}
+                        title={'Book this equipment'}
+                        className="flex-grow bg-brand-secondary text-white font-bold py-2 px-4 rounded-md hover:bg-brand-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent"
+                    >
+                        Book Now
+                    </button>
+                    {currentUser.role === UserRole.ADMIN && (
+                        <div className="flex items-center space-x-2 ml-3">
+                            <button onClick={onClone} className="p-2 text-gray-500 hover:text-brand-secondary transition-colors" aria-label="Clone Equipment">
+                                <CloneIcon className="w-5 h-5" />
+                            </button>
+                            <button onClick={onEdit} className="p-2 text-gray-500 hover:text-brand-primary transition-colors" aria-label="Edit Equipment">
+                                <PencilIcon className="w-5 h-5" />
+                            </button>
+                            <button onClick={onDelete} className="p-2 text-gray-500 hover:text-status-danger transition-colors" aria-label="Delete Equipment">
+                                <TrashIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
@@ -64,12 +79,16 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [searchTerm, setSearchTerm] = useState('');
     
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [isBatchBookingModalOpen, setIsBatchBookingModalOpen] = useState(false);
     const [isEqFormModalOpen, setIsEqFormModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     
     const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
     const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
     const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([]);
+
+    const [batchSelectMode, setBatchSelectMode] = useState(false);
+    const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<Set<string>>(new Set());
 
     const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
     const [lastReturnDate, setLastReturnDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -152,6 +171,44 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         
         return result;
     };
+    
+    // Batch Mode Handlers
+    const handleToggleBatchMode = () => {
+        setBatchSelectMode(prev => !prev);
+        setSelectedEquipmentIds(new Set());
+    };
+    
+    const handleSelectToggle = (equipmentId: string) => {
+        setSelectedEquipmentIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(equipmentId)) {
+                newSet.delete(equipmentId);
+            } else {
+                newSet.add(equipmentId);
+            }
+            return newSet;
+        });
+    };
+    
+    const handleCloseBatchBookingModal = () => {
+        setIsBatchBookingModalOpen(false);
+        setSelectedEquipmentIds(new Set());
+        setBatchSelectMode(false);
+    };
+
+    const handleBatchBookingSubmit = async (reservations: Omit<Reservation, 'id' | 'staged'>[], returnDate: string): Promise<{ success: boolean; message: string; }> => {
+        const result = await apiService.createMultipleReservations(reservations);
+        if (result.success) {
+            showNotification('success', result.message);
+            setLastReturnDate(returnDate);
+            if (reservations.length > 0) {
+                setLastCompanyId(reservations[0].companyId);
+            }
+            handleCloseBatchBookingModal();
+        }
+        return result;
+    };
+
 
     const handleAddEquipment = () => {
         setEditingEquipment(null);
@@ -227,16 +284,21 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
-                {currentUser.role === UserRole.ADMIN && (
-                    <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2">
-                        <button onClick={() => setIsImportModalOpen(true)} className="flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300">
-                            <UploadIcon className="w-5 h-5 mr-2" />Import / Update
-                        </button>
-                        <button onClick={handleAddEquipment} className="flex items-center justify-center bg-status-success text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300">
-                            <PlusIcon className="w-5 h-5 mr-2" />Add Equipment
-                        </button>
-                    </div>
-                )}
+                <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+                     <button onClick={handleToggleBatchMode} className={`flex items-center justify-center font-bold py-2 px-4 rounded-md transition-colors duration-300 ${batchSelectMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-yellow-500 hover:bg-yellow-600 text-white'}`}>
+                        {batchSelectMode ? 'Cancel Batch' : 'Batch Select'}
+                    </button>
+                    {currentUser.role === UserRole.ADMIN && (
+                        <>
+                            <button onClick={() => setIsImportModalOpen(true)} className="flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300">
+                                <UploadIcon className="w-5 h-5 mr-2" />Import / Update
+                            </button>
+                            <button onClick={handleAddEquipment} className="flex items-center justify-center bg-status-success text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300">
+                                <PlusIcon className="w-5 h-5 mr-2" />Add Equipment
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
             {loading ? <div className="text-center text-gray-500">Loading equipment...</div> : (
@@ -250,6 +312,9 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                         key={eq.id}
                                         equipment={eq}
                                         currentUser={currentUser}
+                                        isBatchMode={batchSelectMode}
+                                        isSelected={selectedEquipmentIds.has(eq.id)}
+                                        onSelectToggle={() => handleSelectToggle(eq.id)}
                                         onBook={() => handleBook(eq)}
                                         onEdit={() => handleEditEquipment(eq)}
                                         onClone={() => handleCloneEquipment(eq)}
@@ -268,6 +333,18 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 </div>
             )}
             
+            {batchSelectMode && selectedEquipmentIds.size > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 bg-brand-primary text-white p-4 shadow-lg z-40 flex justify-between items-center">
+                    <span className="font-bold text-lg">{selectedEquipmentIds.size} item(s) selected</span>
+                    <div className="space-x-4">
+                        <button onClick={() => setSelectedEquipmentIds(new Set())} className="font-semibold hover:underline">Clear Selection</button>
+                        <button onClick={() => setIsBatchBookingModalOpen(true)} className="bg-white text-brand-primary font-bold py-2 px-6 rounded-md hover:bg-gray-200 transition-colors">
+                            Book Selected
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {isBookingModalOpen && selectedEquipment && (
                 <BookEquipmentModal
                     equipment={selectedEquipment}
@@ -279,6 +356,19 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     initialReturnDate={lastReturnDate}
                     onClose={handleCloseBookingModal}
                     onSubmit={handleBookingSubmit}
+                />
+            )}
+            
+            {isBatchBookingModalOpen && (
+                <BatchBookEquipmentModal
+                    selectedEquipment={equipmentList.filter(eq => selectedEquipmentIds.has(eq.id))}
+                    currentUser={currentUser}
+                    users={users}
+                    companies={companies}
+                    initialCompanyId={lastCompanyId}
+                    initialReturnDate={lastReturnDate}
+                    onClose={handleCloseBatchBookingModal}
+                    onSubmit={handleBatchBookingSubmit}
                 />
             )}
             

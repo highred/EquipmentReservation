@@ -328,6 +328,54 @@ class ApiService {
         return { success: true, message: 'Reservation created successfully!' };
     }
 
+    async createMultipleReservations(reservationsData: Omit<Reservation, 'id' | 'staged'>[]): Promise<{ success: boolean; message: string; conflictingEquipment?: Equipment[] }> {
+        await this.simulateLatency(1500);
+
+        const conflictingEquipment: Equipment[] = [];
+        
+        // Phase 1: Check for all potential conflicts first
+        for (const resData of reservationsData) {
+            const { equipmentId, pickupDate, returnDate } = resData;
+            
+            const isDoubleBooked = reservations.some(r => {
+                if (r.equipmentId !== equipmentId) return false;
+                const existingPickup = new Date(r.pickupDate);
+                const existingReturn = new Date(r.returnDate);
+                const newPickup = new Date(pickupDate);
+                const newReturn = new Date(returnDate);
+                return (newPickup <= existingReturn && newReturn >= existingPickup);
+            });
+
+            if (isDoubleBooked) {
+                const eq = equipment.find(e => e.id === equipmentId);
+                if (eq && !conflictingEquipment.some(ce => ce.id === eq.id)) {
+                    conflictingEquipment.push(eq);
+                }
+            }
+        }
+
+        if (conflictingEquipment.length > 0) {
+            const conflictingNames = conflictingEquipment.map(e => `${e.description} (${e.gageId})`).join(', ');
+            return { 
+                success: false, 
+                message: `The following equipment is already booked for the selected dates: ${conflictingNames}. No reservations were created.`,
+                conflictingEquipment
+            };
+        }
+
+        // Phase 2: Create reservations if no conflicts found
+        for (const resData of reservationsData) {
+            const reservation: Reservation = {
+                ...resData,
+                id: crypto.randomUUID(),
+                staged: false,
+            };
+            reservations.push(reservation);
+        }
+
+        return { success: true, message: `${reservationsData.length} reservations created successfully!` };
+    }
+
     async updateReservation(updatedReservation: Reservation): Promise<{ success: boolean; message: string }> {
         await this.simulateLatency(1000);
         const { equipmentId, pickupDate, returnDate, id } = updatedReservation;
