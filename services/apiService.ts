@@ -328,12 +328,12 @@ class ApiService {
         return { success: true, message: 'Reservation created successfully!' };
     }
 
-    async createMultipleReservations(reservationsData: Omit<Reservation, 'id' | 'staged'>[]): Promise<{ success: boolean; message: string; conflictingEquipment?: Equipment[] }> {
+    async createMultipleReservations(reservationsData: Omit<Reservation, 'id' | 'staged'>[]): Promise<{ success: boolean; message: string; successfulCount: number; conflictingEquipment: Equipment[] }> {
         await this.simulateLatency(1500);
 
         const conflictingEquipment: Equipment[] = [];
+        let successfulCount = 0;
         
-        // Phase 1: Check for all potential conflicts first
         for (const resData of reservationsData) {
             const { equipmentId, pickupDate, returnDate } = resData;
             
@@ -351,29 +351,34 @@ class ApiService {
                 if (eq && !conflictingEquipment.some(ce => ce.id === eq.id)) {
                     conflictingEquipment.push(eq);
                 }
+            } else {
+                const reservation: Reservation = {
+                    ...resData,
+                    id: crypto.randomUUID(),
+                    staged: false,
+                };
+                reservations.push(reservation);
+                successfulCount++;
             }
         }
 
-        if (conflictingEquipment.length > 0) {
-            const conflictingNames = conflictingEquipment.map(e => `${e.description} (${e.gageId})`).join(', ');
-            return { 
-                success: false, 
-                message: `The following equipment is already booked for the selected dates: ${conflictingNames}. No reservations were created.`,
-                conflictingEquipment
-            };
+        let message = '';
+        if (successfulCount > 0 && conflictingEquipment.length > 0) {
+            const conflictingNames = conflictingEquipment.map(e => e.gageId).join(', ');
+            message = `${successfulCount} items booked. ${conflictingEquipment.length} items (${conflictingNames}) failed due to conflicts.`;
+        } else if (successfulCount > 0) {
+            message = `${successfulCount} reservations created successfully!`;
+        } else {
+            const conflictingNames = conflictingEquipment.map(e => e.gageId).join(', ');
+            message = `All selected items are already booked for the selected dates: ${conflictingNames}. No reservations were created.`;
         }
-
-        // Phase 2: Create reservations if no conflicts found
-        for (const resData of reservationsData) {
-            const reservation: Reservation = {
-                ...resData,
-                id: crypto.randomUUID(),
-                staged: false,
-            };
-            reservations.push(reservation);
-        }
-
-        return { success: true, message: `${reservationsData.length} reservations created successfully!` };
+    
+        return { 
+            success: successfulCount > 0, 
+            message,
+            successfulCount,
+            conflictingEquipment
+        };
     }
 
     async updateReservation(updatedReservation: Reservation): Promise<{ success: boolean; message: string }> {

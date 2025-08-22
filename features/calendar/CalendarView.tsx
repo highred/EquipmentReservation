@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { User, Reservation, Equipment, User as Technician, UserRole, Company } from '../../types';
@@ -250,8 +251,9 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                         {hoveredData.reservations.map(res => {
                             const { eq, companyName } = getReservationDetails(res);
                             return (
-                                <div key={res.id} className="border-b pb-1 last:border-b-0">
-                                    <p className="font-semibold">{eq?.description || 'N/A'} ({eq?.gageId})</p>
+                                <div key={res.id} className="border-b pb-1 last:border-b-0 last:pb-0">
+                                    <p className="font-semibold text-gray-800">{eq?.description || 'N/A'}</p>
+                                    <p className="text-xs text-gray-500 mb-1">Gage ID: {eq?.gageId || 'N/A'}</p>
                                     <p className="text-xs text-gray-600">For: {companyName}</p>
                                     <p className="text-xs text-gray-600">
                                         Reservation: {new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()} - {new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}

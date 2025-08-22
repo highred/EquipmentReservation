@@ -196,17 +196,35 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         setBatchSelectMode(false);
     };
 
-    const handleBatchBookingSubmit = async (reservations: Omit<Reservation, 'id' | 'staged'>[], returnDate: string): Promise<{ success: boolean; message: string; }> => {
-        const result = await apiService.createMultipleReservations(reservations);
-        if (result.success) {
-            showNotification('success', result.message);
+    const handleBatchBookingSubmit = async (reservationsData: Omit<Reservation, 'id' | 'staged'>[], returnDate: string): Promise<{ success: boolean; message: string; }> => {
+        const result = await apiService.createMultipleReservations(reservationsData);
+
+        let notificationType: 'success' | 'warning' | 'error' = 'error';
+        let notificationMessage = result.message;
+
+        if (result.successfulCount > 0 && result.conflictingEquipment.length > 0) {
+            notificationType = 'warning';
+            const conflictingNames = result.conflictingEquipment.map(e => `${e.description} (${e.gageId})`).join(', ');
+            notificationMessage = `${result.successfulCount} items booked successfully. The following items failed due to scheduling conflicts: ${conflictingNames}.`;
+        } else if (result.successfulCount > 0) {
+            notificationType = 'success';
+            notificationMessage = result.message;
+        } else {
+            notificationType = 'error';
+            notificationMessage = result.message;
+        }
+        
+        showNotification(notificationType, notificationMessage);
+
+        if (result.success) { // success is true if at least one item was booked
             setLastReturnDate(returnDate);
-            if (reservations.length > 0) {
-                setLastCompanyId(reservations[0].companyId);
+            if (reservationsData.length > 0) {
+                setLastCompanyId(reservationsData[0].companyId);
             }
             handleCloseBatchBookingModal();
         }
-        return result;
+        
+        return { success: result.success, message: result.message };
     };
 
 
