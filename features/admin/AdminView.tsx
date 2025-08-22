@@ -5,6 +5,7 @@ import { apiService } from '../../services/apiService';
 import { UserGroupIcon, PlusIcon } from '../../components/icons/Icons';
 import UserTable from './UserTable';
 import UserFormModal from './UserFormModal';
+import PasswordModal from './PasswordModal';
 
 const StagingItemCard: React.FC<{ item: StagingItem; onStageToggle: (id: string, staged: boolean) => void; }> = ({ item, onStageToggle }) => {
     return (
@@ -37,6 +38,8 @@ const AdminView: React.FC<{ currentUser: User, onUsersUpdate: () => void; }> = (
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [selectedUserForPassword, setSelectedUserForPassword] = useState<User | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     
     const showNotification = (type: 'success' | 'error', message: string) => {
@@ -84,9 +87,14 @@ const AdminView: React.FC<{ currentUser: User, onUsersUpdate: () => void; }> = (
             showNotification(result.success ? 'success' : 'error', result.message);
             if (result.success) {
                 fetchUsers();
-                onUsersUpdate(); // Notify App component to refresh users list
+                onUsersUpdate();
             }
         }
+    };
+    
+    const handleSetPassword = (user: User) => {
+        setSelectedUserForPassword(user);
+        setIsPasswordModalOpen(true);
     };
 
     const handleUserFormSubmit = async (userData: Omit<User, 'id'> | User) => {
@@ -97,7 +105,17 @@ const AdminView: React.FC<{ currentUser: User, onUsersUpdate: () => void; }> = (
         if (result.success) {
             setIsUserModalOpen(false);
             fetchUsers();
-            onUsersUpdate(); // Notify App component to refresh users list
+            onUsersUpdate();
+        }
+    };
+    
+    const handlePasswordSubmit = async (password: string) => {
+        if (!selectedUserForPassword) return;
+        const result = await apiService.setPassword(selectedUserForPassword.id, password);
+        showNotification(result.success ? 'success' : 'error', result.message);
+        if (result.success) {
+            setIsPasswordModalOpen(false);
+            setSelectedUserForPassword(null);
         }
     };
 
@@ -143,7 +161,7 @@ const AdminView: React.FC<{ currentUser: User, onUsersUpdate: () => void; }> = (
                 {loadingUsers ? (
                      <p className="text-center text-gray-500 py-8">Loading users...</p>
                 ) : (
-                    <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} />
+                    <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} onSetPassword={handleSetPassword} />
                 )}
             </div>
             
@@ -181,11 +199,20 @@ const AdminView: React.FC<{ currentUser: User, onUsersUpdate: () => void; }> = (
                     <p className="text-center text-gray-500 py-8">No equipment scheduled for pickup on this day.</p>
                 )}
             </div>
-             {isUserModalOpen && (
+
+            {isUserModalOpen && (
                 <UserFormModal
                     user={editingUser}
                     onClose={() => setIsUserModalOpen(false)}
                     onSubmit={handleUserFormSubmit}
+                />
+            )}
+
+            {isPasswordModalOpen && selectedUserForPassword && (
+                <PasswordModal
+                    user={selectedUserForPassword}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onSubmit={handlePasswordSubmit}
                 />
             )}
         </div>

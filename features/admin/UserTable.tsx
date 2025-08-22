@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { User, UserRole } from '../../types';
-import { PencilIcon, TrashIcon } from '../../components/icons/Icons';
+import { PencilIcon, TrashIcon, KeyIcon } from '../../components/icons/Icons';
 
 interface UserTableProps {
     users: User[];
     onEdit: (user: User) => void;
     onDelete: (user: User) => void;
+    onSetPassword: (user: User) => void;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, onSetPassword }) => {
     return (
         <div className="overflow-x-auto">
             <table className="min-w-full bg-white">
@@ -41,6 +42,9 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div className="flex items-center justify-end space-x-3">
+                                    <button onClick={() => onSetPassword(user)} className="p-2 text-gray-500 hover:text-status-warning transition-colors" aria-label="Set Password">
+                                        <KeyIcon className="w-5 h-5" />
+                                    </button>
                                     <button onClick={() => onEdit(user)} className="p-2 text-gray-500 hover:text-brand-primary transition-colors" aria-label="Edit User">
                                         <PencilIcon className="w-5 h-5" />
                                     </button>

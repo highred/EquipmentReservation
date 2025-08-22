@@ -3,9 +3,9 @@ import { Equipment, Reservation, User, UserRole, StagingItem } from '../types';
 
 // --- MOCK DATA ---
 let users: User[] = [
-    { id: 'user-1', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN },
-    { id: 'user-2', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN },
-    { id: 'user-3', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN },
+    { id: 'user-1', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN, password: 'password' },
+    { id: 'user-2', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
+    { id: 'user-3', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
 ];
 
 let equipment: Equipment[] = [
@@ -45,33 +45,65 @@ class ApiService {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // --- Auth ---
+    async login(email: string, password_provided: string): Promise<{ success: boolean; message: string; user?: User }> {
+        await this.simulateLatency(1000);
+        const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        
+        if (!user) {
+            return { success: false, message: "Invalid email or password." };
+        }
+        if (user.password !== password_provided) {
+            return { success: false, message: "Invalid email or password." };
+        }
+        if (!user.password) {
+             return { success: false, message: "This account has no password set. Please contact an administrator." };
+        }
+        
+        // Don't send password back to client
+        const { password, ...userToReturn } = user;
+        return { success: true, message: "Login successful.", user: userToReturn };
+    }
+
+
     // --- User Management ---
     async getUsers(): Promise<User[]> {
         await this.simulateLatency(200);
-        return [...users];
+        // Exclude passwords from the user list returned
+        return users.map(u => {
+            const { password, ...user } = u;
+            return user;
+        });
     }
 
     async addUser(userData: Omit<User, 'id'>): Promise<{ success: boolean; message: string; user?: User }> {
         await this.simulateLatency();
+        if (!userData.email) {
+            return { success: false, message: `Email is required.` };
+        }
         if (users.some(u => u.email && u.email.toLowerCase() === userData.email?.toLowerCase())) {
             return { success: false, message: `User with email "${userData.email}" already exists.` };
         }
         const newUser: User = {
             id: `user-${Date.now()}`,
-            ...userData
+            ...userData,
+            password: '', // New users have no password until an admin sets one
         };
         users.push(newUser);
-        return { success: true, message: "User added successfully.", user: newUser };
+        const { password, ...userToReturn } = newUser;
+        return { success: true, message: "User added. Please set a password for them.", user: userToReturn };
     }
 
     async updateUser(updatedUser: User): Promise<{ success: boolean; message: string }> {
         await this.simulateLatency();
         const index = users.findIndex(u => u.id === updatedUser.id);
         if (index > -1) {
-            if (users.some(u => u.id !== updatedUser.id && u.email && u.email.toLowerCase() === updatedUser.email?.toLowerCase())) {
+             if (users.some(u => u.id !== updatedUser.id && u.email && u.email.toLowerCase() === updatedUser.email?.toLowerCase())) {
                 return { success: false, message: `Another user with email "${updatedUser.email}" already exists.` };
             }
-            users[index] = updatedUser;
+            // Preserve the password, which is managed separately
+            const existingPassword = users[index].password;
+            users[index] = { ...updatedUser, password: existingPassword };
             return { success: true, message: "User updated successfully." };
         }
         return { success: false, message: "Could not find user to update." };
@@ -79,7 +111,6 @@ class ApiService {
 
     async deleteUser(userId: string): Promise<{ success: boolean, message: string }> {
         await this.simulateLatency();
-        // Prevent deleting a user who has reservations
         if (reservations.some(r => r.technicianId === userId)) {
             return { success: false, message: "Cannot delete user with active reservations. Please reassign their reservations first." };
         }
@@ -87,6 +118,17 @@ class ApiService {
         users = users.filter(u => u.id !== userId);
         return { success: users.length < initialLength, message: users.length < initialLength ? "User deleted." : "User not found." };
     }
+    
+    async setPassword(userId: string, new_password: string): Promise<{ success: boolean; message: string }> {
+        await this.simulateLatency();
+        const user = users.find(u => u.id === userId);
+        if (user) {
+            user.password = new_password;
+            return { success: true, message: "Password updated successfully." };
+        }
+        return { success: false, message: "User not found." };
+    }
+
 
     // --- Equipment Management ---
     async getEquipment(): Promise<Equipment[]> {
@@ -120,13 +162,11 @@ class ApiService {
         for (const item of newEquipmentList) {
             const gageIdLower = item.gageId.toLowerCase();
 
-            // Check for duplicates within the incoming file
             if (incomingGageIds.has(gageIdLower)) {
                 errors.push({ rowData: item, message: `Duplicate Gage ID "${item.gageId}" within the import file.` });
                 continue;
             }
 
-            // Check for duplicates against existing data
             if (existingGageIds.has(gageIdLower)) {
                 errors.push({ rowData: item, message: `Gage ID "${item.gageId}" already exists in the system.` });
                 continue;
@@ -162,7 +202,6 @@ class ApiService {
         await this.simulateLatency();
         const initialLength = equipment.length;
         equipment = equipment.filter(e => e.id !== equipmentId);
-        // Also delete associated reservations
         reservations = reservations.filter(r => r.equipmentId !== equipmentId);
         return { success: equipment.length < initialLength };
     }
@@ -200,7 +239,6 @@ class ApiService {
             const newPickup = new Date(pickupDate);
             const newReturn = new Date(returnDate);
 
-            // Check for overlap
             return (newPickup < existingReturn && newReturn > existingPickup);
         });
 
@@ -223,7 +261,7 @@ class ApiService {
         const { equipmentId, pickupDate, returnDate, id } = updatedReservation;
 
         const isDoubleBooked = reservations.some(r => {
-            if (r.id === id) return false; // Don't compare with self
+            if (r.id === id) return false;
             if (r.equipmentId !== equipmentId) return false;
             
             const existingPickup = new Date(r.pickupDate);
@@ -257,12 +295,12 @@ class ApiService {
     // --- Admin / Staging ---
     async getStagingList(date: string): Promise<StagingItem[]> {
         await this.simulateLatency();
-        const userList = await this.getUsers();
+        const allUsers = await this.getUsers(); // This now returns users without passwords
         const items = reservations
             .filter(r => r.pickupDate === date)
             .map(r => {
                 const eq = equipment.find(e => e.id === r.equipmentId);
-                const user = userList.find(u => u.id === r.technicianId);
+                const user = allUsers.find(u => u.id === r.technicianId);
                 return { ...r, equipment: eq!, user: user! };
             })
             .filter(item => item.equipment && item.user)

@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Tab, User, UserRole } from '../types';
-import { CalendarIcon, CogIcon, UserIcon, WrenchScrewdriverIcon } from './icons/Icons';
+import { CalendarIcon, CogIcon, UserIcon, WrenchScrewdriverIcon, LogoutIcon } from './icons/Icons';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -8,8 +9,10 @@ interface LayoutProps {
     activeTab: Tab;
     onTabChange: (tab: Tab) => void;
     currentUser: User;
+    viewAsUser: User | null;
     users: User[];
     onUserChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+    onLogout: () => void;
 }
 
 const ICONS: Record<Tab, React.ReactNode> = {
@@ -19,7 +22,7 @@ const ICONS: Record<Tab, React.ReactNode> = {
     ADMIN: <CogIcon className="w-5 h-5 mr-2" />,
 };
 
-const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange, currentUser, users, onUserChange }) => {
+const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange, currentUser, viewAsUser, users, onUserChange, onLogout }) => {
     return (
         <div className="min-h-screen bg-gray-100 font-sans">
             <header className="bg-brand-primary shadow-lg">
@@ -32,19 +35,26 @@ const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange,
                             <h1 className="text-2xl font-bold text-white tracking-wider">ATI Equipment Reservation</h1>
                         </div>
                         <div className="flex items-center space-x-4">
-                             <div className="text-white text-sm">
-                                <label htmlFor="user-select" className="font-semibold mr-2">View As:</label>
-                                <select
-                                    id="user-select"
-                                    value={currentUser.id}
-                                    onChange={onUserChange}
-                                    className="bg-brand-secondary border border-brand-accent rounded-md py-1 px-2 focus:outline-none focus:ring-2 focus:ring-brand-light"
-                                >
-                                    {users.map(user => (
-                                        <option key={user.id} value={user.id}>{user.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {currentUser.role === UserRole.ADMIN && (
+                                 <div className="text-white text-sm">
+                                    <label htmlFor="user-select" className="font-semibold mr-2">View As:</label>
+                                    <select
+                                        id="user-select"
+                                        value={viewAsUser?.id || currentUser.id}
+                                        onChange={onUserChange}
+                                        className="bg-brand-secondary border border-brand-accent rounded-md py-1 px-2 focus:outline-none focus:ring-2 focus:ring-brand-light"
+                                    >
+                                        <option key={currentUser.id} value={currentUser.id}>{currentUser.name}</option>
+                                        {users.filter(u => u.id !== currentUser.id).map(user => (
+                                            <option key={user.id} value={user.id}>{user.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            <div className="text-white font-semibold">{currentUser.name}</div>
+                            <button onClick={onLogout} className="p-2 text-white hover:bg-brand-secondary rounded-full transition-colors" aria-label="Logout">
+                                <LogoutIcon className="w-6 h-6" />
+                            </button>
                         </div>
                     </div>
                 </div>

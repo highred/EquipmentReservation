@@ -7,6 +7,7 @@ import CalendarView from './features/calendar/CalendarView';
 import EquipmentView from './features/equipment/EquipmentView';
 import TechnicianView from './features/technician/TechnicianView';
 import AdminView from './features/admin/AdminView';
+import LoginScreen from './features/auth/LoginScreen';
 
 const TABS: { id: Tab; label: string; roles: UserRole[] }[] = [
     { id: 'CALENDAR', label: 'Calendar', roles: [UserRole.ADMIN, UserRole.TECHNICIAN] },
@@ -16,79 +17,95 @@ const TABS: { id: Tab; label: string; roles: UserRole[] }[] = [
 ];
 
 const App: React.FC = () => {
-    const [users, setUsers] = useState<User[]>([]);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [viewAsUser, setViewAsUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('CALENDAR');
     const [isLoading, setIsLoading] = useState(true);
 
+    const loggedInUser = currentUser;
+    const effectiveUser = viewAsUser || currentUser;
+
     useEffect(() => {
-        const loadInitialData = async () => {
-            const fetchedUsers = await apiService.getUsers();
-            setUsers(fetchedUsers);
-            if (fetchedUsers.length > 0) {
-                // Default to first user, assumed to be an admin
-                setCurrentUser(fetchedUsers[0]);
+        const fetchAllUsers = async () => {
+             if (currentUser?.role === UserRole.ADMIN) {
+                const fetchedUsers = await apiService.getUsers();
+                setAllUsers(fetchedUsers);
             }
-            setIsLoading(false);
         };
-        loadInitialData();
-    }, []);
+        fetchAllUsers();
+    }, [currentUser]);
+
+    const handleLogin = (user: User) => {
+        setCurrentUser(user);
+        setViewAsUser(user);
+        const userTabs = TABS.filter(tab => tab.roles.includes(user.role));
+        setActiveTab(userTabs[0]?.id || 'CALENDAR');
+    };
+
+    const handleLogout = () => {
+        setCurrentUser(null);
+        setViewAsUser(null);
+        setAllUsers([]);
+    };
 
     const availableTabs = useMemo(() => {
-        if (!currentUser) return [];
-        return TABS.filter(tab => tab.roles.includes(currentUser.role));
-    }, [currentUser]);
+        if (!loggedInUser) return [];
+        return TABS.filter(tab => tab.roles.includes(loggedInUser.role));
+    }, [loggedInUser]);
 
     const handleTabChange = (tab: Tab) => {
         setActiveTab(tab);
     };
     
     const handleUserChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedUser = users.find(u => u.id === event.target.value);
+        const selectedUser = allUsers.find(u => u.id === event.target.value);
         if (selectedUser) {
-            setCurrentUser(selectedUser);
-            // If current tab is not available for new user, switch to their first available tab
-            const newAvailableTabs = TABS.filter(tab => tab.roles.includes(selectedUser.role));
-            if (!newAvailableTabs.some(t => t.id === activeTab)) {
-                setActiveTab(newAvailableTabs[0].id);
+            setViewAsUser(selectedUser);
+            // Admins can view technician tabs
+            if (loggedInUser?.role === UserRole.ADMIN && selectedUser.role === UserRole.TECHNICIAN) {
+                // do nothing to the tabs
+            } else {
+                 const newAvailableTabs = TABS.filter(tab => tab.roles.includes(selectedUser.role));
+                if (!newAvailableTabs.some(t => t.id === activeTab)) {
+                    setActiveTab(newAvailableTabs[0].id);
+                }
             }
         }
     };
 
     const handleUsersUpdate = async () => {
-        const updatedUsers = await apiService.getUsers();
-        setUsers(updatedUsers);
-        // Ensure currentUser is still valid
-        if (currentUser && !updatedUsers.some(u => u.id === currentUser.id)) {
-            setCurrentUser(updatedUsers.length > 0 ? updatedUsers[0] : null);
+        if (currentUser?.role === UserRole.ADMIN) {
+            const updatedUsers = await apiService.getUsers();
+            setAllUsers(updatedUsers);
+            // If the user being viewed was deleted, revert to self-view
+            if (viewAsUser && !updatedUsers.some(u => u.id === viewAsUser.id)) {
+                setViewAsUser(currentUser);
+            }
         }
     }
 
     const renderContent = () => {
-        if (!currentUser) {
-            return <div className="text-center p-8">No user selected or available.</div>;
+        if (!effectiveUser) {
+            return <div className="text-center p-8">Loading...</div>;
         }
 
         switch (activeTab) {
             case 'CALENDAR':
-                return <CalendarView currentUser={currentUser} />;
+                return <CalendarView currentUser={effectiveUser} />;
             case 'EQUIPMENT':
-                return <EquipmentView currentUser={currentUser} />;
+                return <EquipmentView currentUser={effectiveUser} />;
             case 'TECHNICIAN':
-                return <TechnicianView currentUser={currentUser} />;
+                return <TechnicianView currentUser={effectiveUser} />;
             case 'ADMIN':
-                return <AdminView currentUser={currentUser} onUsersUpdate={handleUsersUpdate} />;
+                return <AdminView currentUser={effectiveUser} onUsersUpdate={handleUsersUpdate} />;
             default:
-                return <CalendarView currentUser={currentUser} />;
+                return <CalendarView currentUser={effectiveUser} />;
         }
     };
 
-    if (isLoading || !currentUser) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="text-xl font-semibold">Loading Application...</div>
-            </div>
-        );
+    if (!currentUser) {
+        return <LoginScreen onLogin={handleLogin} />;
     }
 
     return (
@@ -96,9 +113,11 @@ const App: React.FC = () => {
             tabs={availableTabs} 
             activeTab={activeTab} 
             onTabChange={handleTabChange}
-            currentUser={currentUser}
-            users={users}
+            currentUser={loggedInUser}
+            viewAsUser={viewAsUser}
+            users={allUsers}
             onUserChange={handleUserChange}
+            onLogout={handleLogout}
         >
             {renderContent()}
         </Layout>
