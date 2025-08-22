@@ -94,3 +94,9 @@ export const LogoutIcon: React.FC<IconProps> = ({ className }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
     </svg>
 );
+
+export const PrintIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6 18.25m10.56-4.421c.24.03.48.062.72.096m-.72-.096L18 18.25m3.75-10.5H18a2.25 2.25 0 00-2.25 2.25v.542c0 .597.237 1.17.659 1.591l.535.535a2.25 2.25 0 010 3.182l-.535.535a2.25 2.25 0 01-1.591.659v.542A2.25 2.25 0 0118 21.75h-2.25m-11.25 0H6a2.25 2.25 0 01-2.25-2.25v-.542c0-.597-.237-1.17-.659-1.591l-.535-.535a2.25 2.25 0 000-3.182l.535-.535A2.25 2.25 0 003 9.323v-.542A2.25 2.25 0 005.25 6.75H6m11.25 0H18m-12 0h2.25m6.75 0h2.25" />
+    </svg>
+);
