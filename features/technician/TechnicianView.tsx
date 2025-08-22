@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { User, Reservation, Equipment, UserRole } from '../../types';
+import { User, Reservation, Equipment, UserRole, Company } from '../../types';
 import { apiService } from '../../services/apiService';
 import { PencilIcon, TrashIcon } from '../../components/icons/Icons';
 import ReservationFormModal from '../reservations/ReservationFormModal';
@@ -9,10 +10,11 @@ const ReservationCard: React.FC<{
     reservation: Reservation,
     equipment?: Equipment,
     technician?: User,
+    companyName: string,
     currentUser: User,
     onEdit: () => void,
     onDelete: () => void
-}> = ({ reservation, equipment, technician, currentUser, onEdit, onDelete }) => {
+}> = ({ reservation, equipment, technician, companyName, currentUser, onEdit, onDelete }) => {
     const pickupDate = new Date(reservation.pickupDate + 'T00:00:00');
     const returnDate = new Date(reservation.returnDate + 'T00:00:00');
     
@@ -32,7 +34,7 @@ const ReservationCard: React.FC<{
                 </div>
 
                 <div className="text-left">
-                    <p className="font-semibold text-gray-700">{reservation.company}</p>
+                    <p className="font-semibold text-gray-700">{companyName}</p>
                     <p className="text-sm text-gray-500">
                         {pickupDate.toLocaleDateString()} - {returnDate.toLocaleDateString()}
                     </p>
@@ -64,6 +66,7 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [allUsers, setAllUsers] = useState<User[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTechId, setSelectedTechId] = useState<string>(currentUser.role === UserRole.TECHNICIAN ? currentUser.id : 'all');
     const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
@@ -71,20 +74,26 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
 
     const fetchAllData = useCallback(async () => {
         setLoading(true);
-        const [resData, eqData, usersData] = await Promise.all([
+        const [resData, eqData, usersData, companyData] = await Promise.all([
             apiService.getReservations(),
             apiService.getEquipment(),
-            apiService.getUsers()
+            apiService.getUsers(),
+            apiService.getCompanies(),
         ]);
         setReservations(resData.sort((a, b) => new Date(b.pickupDate).getTime() - new Date(a.pickupDate).getTime()));
         setEquipment(eqData);
         setAllUsers(usersData);
+        setCompanies(companyData);
         setLoading(false);
     }, []);
 
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
+
+    const companyMap = useMemo(() => {
+        return new Map(companies.map(c => [c.id, c.name]));
+    }, [companies]);
 
     const showNotification = (type: 'success' | 'error', message: string) => {
         setNotification({ type, message });
@@ -110,11 +119,14 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
     
     const handleUpdateReservation = async (updatedReservation: Reservation) => {
         const result = await apiService.updateReservation(updatedReservation);
-        showNotification(result.success ? 'success' : 'error', result.message);
-        if(result.success) {
+        if(!result.success) {
+            showNotification('error', result.message);
+        } else {
+            showNotification('success', result.message);
             setEditingReservation(null);
             fetchAllData();
         }
+        return result;
     }
 
     const getEquipmentById = (id: string) => equipment.find(e => e.id === id);
@@ -171,6 +183,7 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                                     reservation={res} 
                                     equipment={getEquipmentById(res.equipmentId)} 
                                     technician={getTechnicianById(res.technicianId)}
+                                    companyName={companyMap.get(res.companyId) || 'Unknown Company'}
                                     currentUser={currentUser} 
                                     onEdit={() => handleEdit(res)} 
                                     onDelete={() => handleDelete(res)} 
@@ -191,6 +204,7 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                                     reservation={res} 
                                     equipment={getEquipmentById(res.equipmentId)}
                                     technician={getTechnicianById(res.technicianId)}
+                                    companyName={companyMap.get(res.companyId) || 'Unknown Company'}
                                     currentUser={currentUser} 
                                     onEdit={() => handleEdit(res)} 
                                     onDelete={() => handleDelete(res)} 
@@ -244,6 +258,7 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                 <ReservationFormModal 
                     reservation={editingReservation}
                     equipment={getEquipmentById(editingReservation.equipmentId)!}
+                    companies={companies}
                     onClose={() => setEditingReservation(null)}
                     onSubmit={handleUpdateReservation}
                 />

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { User, Equipment, Reservation, UserRole } from '../../types';
+import { User, Equipment, Reservation, UserRole, Company } from '../../types';
 import { apiService } from '../../services/apiService';
 import BookEquipmentModal from './BookEquipmentModal';
 import EquipmentFormModal from './EquipmentFormModal';
@@ -34,7 +34,7 @@ const EquipmentCard: React.FC<{
                     <div className="flex justify-between items-center">
                         <span className="font-semibold">Cal. Due:</span>
                         <span className={`px-2 py-1 rounded-md text-xs font-medium ${isCalExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                            {new Date(equipment.dueDate).toLocaleDateString()}
+                            {new Date(equipment.dueDate + 'T00:00:00').toLocaleDateString()}
                         </span>
                     </div>
                 </div>
@@ -69,10 +69,10 @@ const EquipmentCard: React.FC<{
 const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
     const [users, setUsers] = useState<User[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     
-    // State for modals
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [isEqFormModalOpen, setIsEqFormModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -83,19 +83,27 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
     const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning', message: string } | null>(null);
     const [lastReturnDate, setLastReturnDate] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [lastCompany, setLastCompany] = useState<string>('');
+    const [lastCompanyId, setLastCompanyId] = useState<string>('');
     
-    const fetchEquipment = useCallback(async () => {
+    const fetchAllData = useCallback(async () => {
         setLoading(true);
-        const data = await apiService.getEquipment();
-        setEquipmentList(data);
+        const [eqData, usersData, companyData] = await Promise.all([
+            apiService.getEquipment(),
+            apiService.getUsers(),
+            apiService.getCompanies()
+        ]);
+        setEquipmentList(eqData);
+        setUsers(usersData);
+        setCompanies(companyData);
+        if (companyData.length > 0 && !lastCompanyId) {
+            setLastCompanyId(companyData[0].id);
+        }
         setLoading(false);
-    }, []);
+    }, [lastCompanyId]);
 
     useEffect(() => {
-        fetchEquipment();
-        apiService.getUsers().then(setUsers);
-    }, [fetchEquipment]);
+        fetchAllData();
+    }, [fetchAllData]);
 
     const filteredEquipment = useMemo(() => {
         return equipmentList.filter(eq =>
@@ -119,10 +127,9 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
     const showNotification = (type: 'success' | 'error' | 'warning', message: string) => {
         setNotification({ type, message });
-        setTimeout(() => setNotification(null), 8000); // Increased timeout for import results
+        setTimeout(() => setNotification(null), 8000);
     };
 
-    // Booking Modal Handlers
     const handleBook = async (equipment: Equipment) => {
         const reservations = await apiService.getReservationsForEquipment(equipment.id);
         setUpcomingReservations(reservations);
@@ -149,14 +156,13 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         if (result.success) {
             showNotification('success', result.message);
             setLastReturnDate(returnDate);
-            setLastCompany(reservation.company);
+            setLastCompanyId(reservation.companyId);
             handleCloseBookingModal();
         }
         
         return result;
     };
 
-    // Equipment Form Modal Handlers (Add/Edit/Clone)
     const handleAddEquipment = () => {
         setEditingEquipment(null);
         setIsEqFormModalOpen(true);
@@ -178,7 +184,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             const result = await apiService.deleteEquipment(equipment.id);
             if (result.success) {
                 showNotification('success', 'Equipment deleted successfully.');
-                fetchEquipment();
+                fetchAllData();
             } else {
                 showNotification('error', 'Failed to delete equipment.');
             }
@@ -197,7 +203,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         if (result.success) {
             setIsEqFormModalOpen(false);
             setEditingEquipment(null);
-            fetchEquipment();
+            fetchAllData();
         }
     };
 
@@ -205,17 +211,11 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         const { createdCount, updatedCount, errors } = result;
         const successCount = createdCount + updatedCount;
         let message = `Import complete: ${createdCount} items added, ${updatedCount} items updated.`;
-
         if (errors.length > 0) {
             message += ` ${errors.length} items failed.`;
-            // Log errors for debugging, they are displayed in the modal
-            console.error("Import errors:", errors);
         }
         showNotification(errors.length > 0 ? 'warning' : 'success', message);
-        
-        if (successCount > 0) {
-            fetchEquipment();
-        }
+        if (successCount > 0) { fetchAllData(); }
     };
 
     return (
@@ -239,27 +239,17 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 />
                 {currentUser.role === UserRole.ADMIN && (
                     <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2">
-                        <button
-                            onClick={() => setIsImportModalOpen(true)}
-                            className="flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300"
-                        >
-                            <UploadIcon className="w-5 h-5 mr-2" />
-                            Import / Update
+                        <button onClick={() => setIsImportModalOpen(true)} className="flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300">
+                            <UploadIcon className="w-5 h-5 mr-2" />Import / Update
                         </button>
-                        <button
-                            onClick={handleAddEquipment}
-                            className="flex items-center justify-center bg-status-success text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300"
-                        >
-                            <PlusIcon className="w-5 h-5 mr-2" />
-                            Add Equipment
+                        <button onClick={handleAddEquipment} className="flex items-center justify-center bg-status-success text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300">
+                            <PlusIcon className="w-5 h-5 mr-2" />Add Equipment
                         </button>
                     </div>
                 )}
             </div>
 
-            {loading ? (
-                <div className="text-center text-gray-500">Loading equipment...</div>
-            ) : (
+            {loading ? <div className="text-center text-gray-500">Loading equipment...</div> : (
                 <div className="space-y-8">
                     {Object.entries(groupedEquipment).sort(([a], [b]) => a.localeCompare(b)).map(([description, items]) => (
                         <div key={description}>
@@ -293,28 +283,17 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     equipment={selectedEquipment}
                     currentUser={currentUser}
                     users={users}
+                    companies={companies}
                     upcomingReservations={upcomingReservations}
-                    initialCompany={lastCompany}
+                    initialCompanyId={lastCompanyId}
                     initialReturnDate={lastReturnDate}
                     onClose={handleCloseBookingModal}
                     onSubmit={handleBookingSubmit}
                 />
             )}
             
-            {isEqFormModalOpen && (
-                <EquipmentFormModal
-                    equipment={editingEquipment}
-                    onClose={() => { setIsEqFormModalOpen(false); setEditingEquipment(null); }}
-                    onSubmit={handleEqFormSubmit}
-                />
-            )}
-
-            {isImportModalOpen && (
-                <EquipmentImportModal
-                    onClose={() => setIsImportModalOpen(false)}
-                    onImportComplete={handleImportComplete}
-                />
-            )}
+            {isEqFormModalOpen && <EquipmentFormModal equipment={editingEquipment} onClose={() => { setIsEqFormModalOpen(false); setEditingEquipment(null); }} onSubmit={handleEqFormSubmit} />}
+            {isImportModalOpen && <EquipmentImportModal onClose={() => setIsImportModalOpen(false)} onImportComplete={handleImportComplete} />}
         </div>
     );
 };

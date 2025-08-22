@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
-import { User, Reservation, Equipment, User as Technician, UserRole } from '../../types';
+import { User, Reservation, Equipment, User as Technician, UserRole, Company } from '../../types';
 import { apiService } from '../../services/apiService';
 import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons/Icons';
 import { getTechnicianColor } from '../../utils';
@@ -63,22 +64,27 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [technicians, setTechnicians] = useState<Technician[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
     const [hoveredData, setHoveredData] = useState<HoveredData | null>(null);
     const [filterTechId, setFilterTechId] = useState<string>('all');
+
+    const companyMap = useMemo(() => new Map(companies.map(c => [c.id, c.name])), [companies]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
         const start = calendarDays[0];
         const end = calendarDays[calendarDays.length - 1];
-        const [resData, eqData, techData] = await Promise.all([
+        const [resData, eqData, techData, companyData] = await Promise.all([
             apiService.getReservations(formatDate(start, 'short'), formatDate(end, 'short')),
             apiService.getEquipment(),
-            apiService.getUsers()
+            apiService.getUsers(),
+            apiService.getCompanies()
         ]);
         setReservations(resData);
         setEquipment(eqData);
         setTechnicians(techData);
+        setCompanies(companyData);
         setLoading(false);
     }, [calendarDays]);
 
@@ -114,7 +120,8 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
     const getReservationDetails = (res: Reservation) => {
         const eq = equipment.find(e => e.id === res.equipmentId);
         const tech = technicians.find(t => t.id === res.technicianId);
-        return { eq, tech };
+        const companyName = companyMap.get(res.companyId) || 'Unknown Company';
+        return { eq, tech, companyName };
     };
     
     const handleMouseEnter = (reservations: Reservation[], e: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => {
@@ -141,7 +148,7 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                     <div className="col-span-7 flex items-center justify-center h-full text-gray-500">Loading reservations...</div>
                 ) : (
                     filteredReservations.map((res, index) => {
-                        const { eq, tech } = getReservationDetails(res);
+                        const { eq, tech, companyName } = getReservationDetails(res);
                         if (!tech) return null;
                         const pickup = new Date(res.pickupDate + 'T00:00:00');
                         const ret = new Date(res.returnDate + 'T00:00:00');
@@ -169,10 +176,10 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                                     gridColumnEnd: `span ${duration}`,
                                     top: `${(index % 10) * 3}rem`
                                 }}
-                                title={`${tech?.name} - ${eq?.description} for ${res.company}`}
+                                title={`${tech?.name} - ${eq?.description} for ${companyName}`}
                             >
                                 <p className="font-bold truncate">{tech?.name || 'Technician not found'}</p>
-                                <p className="truncate">{eq?.description} for {res.company}</p>
+                                <p className="truncate">{eq?.description} for {companyName}</p>
                             </button>
                         );
                     })
@@ -241,11 +248,11 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                     </p>
                     <div className="space-y-2 border-t pt-2 max-h-60 overflow-y-auto">
                         {hoveredData.reservations.map(res => {
-                            const { eq } = getReservationDetails(res);
+                            const { eq, companyName } = getReservationDetails(res);
                             return (
                                 <div key={res.id} className="border-b pb-1 last:border-b-0">
                                     <p className="font-semibold">{eq?.description || 'N/A'} ({eq?.gageId})</p>
-                                    <p className="text-xs text-gray-600">For: {res.company}</p>
+                                    <p className="text-xs text-gray-600">For: {companyName}</p>
                                     <p className="text-xs text-gray-600">
                                         Reservation: {new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()} - {new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}
                                     </p>

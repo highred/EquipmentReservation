@@ -10,11 +10,16 @@ export interface Equipment {
   dueDate: string; // Calibration due date
 }
 
+export interface Company {
+  id: string;
+  name: string;
+}
+
 export interface Reservation {
   id: string;
   equipmentId: string;
   technicianId: string;
-  company: string;
+  companyId: string;
   pickupDate: string; // ISO 8601 format: YYYY-MM-DD
   returnDate: string; // ISO 8601 format: YYYY-MM-DD
   notes: string;
@@ -34,9 +39,10 @@ export interface User {
   password?: string;
 }
 
-export type Tab = 'CALENDAR' | 'EQUIPMENT' | 'TECHNICIAN' | 'ADMIN';
+export type Tab = 'CALENDAR' | 'EQUIPMENT' | 'TECHNICIAN' | 'COMPANY' | 'ADMIN';
 
 export interface StagingItem extends Reservation {
     equipment: Equipment;
     user: User;
+    company: Company;
 }

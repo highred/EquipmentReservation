@@ -1,21 +1,22 @@
 
 import React, { useState } from 'react';
-import { Equipment, User, Reservation, UserRole } from '../../types';
+import { Equipment, User, Reservation, UserRole, Company } from '../../types';
 
 interface BookEquipmentModalProps {
     equipment: Equipment;
     currentUser: User;
     users: User[];
+    companies: Company[];
     upcomingReservations: Reservation[];
-    initialCompany: string;
+    initialCompanyId: string;
     initialReturnDate: string;
     onClose: () => void;
     onSubmit: (reservation: Omit<Reservation, 'id' | 'equipmentId' | 'staged'>, returnDate: string) => Promise<{ success: boolean; message: string; }>;
 }
 
-const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, currentUser, users, upcomingReservations, initialCompany, initialReturnDate, onClose, onSubmit }) => {
+const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, currentUser, users, companies, upcomingReservations, initialCompanyId, initialReturnDate, onClose, onSubmit }) => {
     const today = new Date().toISOString().split('T')[0];
-    const [company, setCompany] = useState(initialCompany);
+    const [companyId, setCompanyId] = useState(initialCompanyId || (companies[0]?.id || ''));
     const [pickupDate, setPickupDate] = useState(today);
     const [returnDate, setReturnDate] = useState(initialReturnDate);
     const [notes, setNotes] = useState('');
@@ -26,7 +27,7 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!company || !pickupDate || !returnDate) {
+        if (!companyId || !pickupDate || !returnDate) {
             setError('All fields except notes are required.');
             return;
         }
@@ -38,7 +39,7 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
         setIsSubmitting(true);
         const result = await onSubmit({
             technicianId,
-            company,
+            companyId,
             pickupDate,
             returnDate,
             notes,
@@ -51,6 +52,7 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
     };
 
     const getTechnicianName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
+    const getCompanyName = (id: string) => companies.find(c => c.id === id)?.name || 'Unknown';
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -70,7 +72,7 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
                         <div className="max-h-24 overflow-y-auto space-y-1 text-xs">
                             {upcomingReservations.map(res => (
                                 <div key={res.id} className="text-gray-600">
-                                    <span className="font-semibold">{getTechnicianName(res.technicianId)}:</span> {new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()} to {new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}
+                                    <span className="font-semibold">{getTechnicianName(res.technicianId)} ({getCompanyName(res.companyId)}):</span> {new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()} to {new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}
                                 </div>
                             ))}
                         </div>
@@ -99,7 +101,17 @@ const BookEquipmentModal: React.FC<BookEquipmentModalProps> = ({ equipment, curr
                         )}
                         <div>
                             <label htmlFor="company" className="block text-sm font-medium text-gray-700">Company</label>
-                            <input type="text" id="company" value={company} onChange={e => setCompany(e.target.value)} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"/>
+                            <select
+                                id="company"
+                                value={companyId}
+                                onChange={e => setCompanyId(e.target.value)}
+                                required
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"
+                            >
+                                {companies.map(comp => (
+                                    <option key={comp.id} value={comp.id}>{comp.name}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>

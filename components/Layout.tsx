@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tab, User, UserRole } from '../types';
-import { CalendarIcon, CogIcon, UserIcon, WrenchScrewdriverIcon, LogoutIcon } from './icons/Icons';
+import { CalendarIcon, CogIcon, UserIcon, WrenchScrewdriverIcon, LogoutIcon, BuildingOfficeIcon } from './icons/Icons';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -19,6 +19,7 @@ const ICONS: Record<Tab, React.ReactNode> = {
     CALENDAR: <CalendarIcon className="w-5 h-5 mr-2" />,
     EQUIPMENT: <WrenchScrewdriverIcon className="w-5 h-5 mr-2" />,
     TECHNICIAN: <UserIcon className="w-5 h-5 mr-2" />,
+    COMPANY: <BuildingOfficeIcon className="w-5 h-5 mr-2" />,
     ADMIN: <CogIcon className="w-5 h-5 mr-2" />,
 };
 

@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
-import { Equipment, Reservation } from '../../types';
+import { Equipment, Reservation, Company } from '../../types';
 
 interface ReservationFormModalProps {
     reservation: Reservation;
     equipment: Equipment;
+    companies: Company[];
     onClose: () => void;
-    onSubmit: (reservation: Reservation) => Promise<void>;
+    onSubmit: (reservation: Reservation) => Promise<{success: boolean, message: string}>;
 }
 
-const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation, equipment, onClose, onSubmit }) => {
+const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation, equipment, companies, onClose, onSubmit }) => {
     const [formData, setFormData] = useState<Reservation>(reservation);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,7 +19,7 @@ const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation
         setFormData(reservation);
     }, [reservation]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -25,7 +27,7 @@ const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!formData.company || !formData.pickupDate || !formData.returnDate) {
+        if (!formData.companyId || !formData.pickupDate || !formData.returnDate) {
             setError('All fields except notes are required.');
             return;
         }
@@ -35,8 +37,12 @@ const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation
         }
         
         setIsSubmitting(true);
-        await onSubmit(formData);
+        const result = await onSubmit(formData);
         setIsSubmitting(false);
+
+        if (!result.success) {
+            setError(result.message);
+        }
     };
 
     return (
@@ -52,8 +58,19 @@ const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="company" className="block text-sm font-medium text-gray-700">Company</label>
-                        <input type="text" name="company" value={formData.company} onChange={handleChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"/>
+                        <label htmlFor="companyId" className="block text-sm font-medium text-gray-700">Company</label>
+                        <select
+                            name="companyId"
+                            id="companyId"
+                            value={formData.companyId}
+                            onChange={handleChange}
+                            required
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"
+                        >
+                            {companies.map(comp => (
+                                <option key={comp.id} value={comp.id}>{comp.name}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
