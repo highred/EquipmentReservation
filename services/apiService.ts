@@ -1,3 +1,4 @@
+
 import { Equipment, Reservation, User, UserRole, StagingItem, Company } from '../types';
 import { TECHNICIAN_COLORS } from '../utils';
 
@@ -15,13 +16,13 @@ let companies: Company[] = [
 ];
 
 let equipment: Equipment[] = [
-    { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', gageId: 'G-1001', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts' },
-    { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', gageId: 'G-1002', description: 'Oscilloscope', manufacturer: 'Tektronix', model: 'TBS1052B', range: '50 MHz', uom: 'MHz' },
+    { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', gageId: 'G-1001', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts', imageUrl: 'https://placehold.co/400x300/0D47A1/FFFFFF/png?text=Fluke+87V' },
+    { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', gageId: 'G-1002', description: 'Oscilloscope', manufacturer: 'Tektronix', model: 'TBS1052B', range: '50 MHz', uom: 'MHz', imageUrl: 'https://placehold.co/400x300/42A5F5/FFFFFF/png?text=Tektronix' },
     { id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', gageId: 'G-1003', description: 'Calipers', manufacturer: 'Mitutoyo', model: 'CD-6" ASX', range: '6 inch', uom: 'in' },
-    { id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', gageId: 'G-2001', description: 'Power Supply', manufacturer: 'Keysight', model: 'E3631A', range: '0-6V/0-25V', uom: 'V/A' },
+    { id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', gageId: 'G-2001', description: 'Power Supply', manufacturer: 'Keysight', model: 'E3631A', range: '0-6V/0-25V', uom: 'V/A', imageUrl: 'https://placehold.co/400x300/1976D2/FFFFFF/png?text=Keysight' },
     { id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', gageId: 'G-2002', description: 'Torque Wrench', manufacturer: 'Snap-on', model: 'TECH2FR100', range: '5-100 ft-lb', uom: 'ft-lb' },
     { id: 'ffffffff-ffff-ffff-ffff-ffffffffffff', gageId: 'G-3001', description: 'Infrared Thermometer', manufacturer: 'Flir', model: 'TG165', range: '-25 to 380°C', uom: '°C' },
-    { id: 'gggggggg-gggg-gggg-gggg-gggggggggggg', gageId: 'G-1004', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts' },
+    { id: 'gggggggg-gggg-gggg-gggg-gggggggggggg', gageId: 'G-1004', description: 'Digital Multimeter', manufacturer: 'Fluke', model: '87V', range: '1000V', uom: 'Volts', imageUrl: 'https://placehold.co/400x300/0D47A1/FFFFFF/png?text=Fluke+87V' },
 ];
 
 let reservations: Reservation[] = [

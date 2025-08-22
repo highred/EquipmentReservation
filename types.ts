@@ -7,6 +7,7 @@ export interface Equipment {
   model: string;
   range: string;
   uom: string; // Unit of Measurement
+  imageUrl?: string;
 }
 
 export interface Company {

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { apiService } from '../../services/apiService';
@@ -9,6 +10,7 @@ interface EquipmentImportModalProps {
 }
 
 const REQUIRED_HEADERS = ['gageId', 'description', 'manufacturer', 'model', 'range', 'uom'];
+const OPTIONAL_HEADERS = ['imageUrl'];
 
 const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, onImportComplete }) => {
     const [file, setFile] = useState<File | null>(null);
@@ -23,7 +25,7 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
     };
 
     const handleDownloadTemplate = () => {
-        const csvContent = REQUIRED_HEADERS.join(',') + '\n';
+        const csvContent = [...REQUIRED_HEADERS, ...OPTIONAL_HEADERS].join(',') + '\n';
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         if (link.download !== undefined) {
@@ -97,6 +99,7 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
                             <li>If a <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> in the file matches an existing item, its details will be updated.</li>
                             <li>If a <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> does not exist, a new equipment item will be created.</li>
                             <li>Your CSV file must contain the following headers: <code className="text-xs bg-gray-200 p-1 rounded">{REQUIRED_HEADERS.join(', ')}</code></li>
+                             <li>An optional <code className="text-xs bg-gray-200 p-1 rounded">imageUrl</code> column can be included with a public URL to a photo.</li>
                             <li>
                                 <button onClick={handleDownloadTemplate} className="text-brand-primary hover:underline font-semibold">
                                     Download Template

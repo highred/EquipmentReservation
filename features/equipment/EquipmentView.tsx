@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User, Equipment, Reservation, UserRole, Company } from '../../types';
 import { apiService } from '../../services/apiService';
@@ -5,7 +6,7 @@ import BookEquipmentModal from './BookEquipmentModal';
 import BatchBookEquipmentModal from './BatchBookEquipmentModal';
 import EquipmentFormModal from './EquipmentFormModal';
 import EquipmentImportModal from './EquipmentImportModal';
-import { PencilIcon, TrashIcon, PlusIcon, CloneIcon, UploadIcon } from '../../components/icons/Icons';
+import { PencilIcon, TrashIcon, PlusIcon, CloneIcon, UploadIcon, PhotoIcon } from '../../components/icons/Icons';
 
 const EquipmentCard: React.FC<{
     equipment: Equipment;
@@ -30,6 +31,13 @@ const EquipmentCard: React.FC<{
                     {isSelected && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                 </div>
             )}
+            <div className="h-40 bg-gray-200 flex items-center justify-center">
+                {equipment.imageUrl ? (
+                    <img src={equipment.imageUrl} alt={equipment.description} className="w-full h-full object-cover" />
+                ) : (
+                    <PhotoIcon className="w-16 h-16 text-gray-400" />
+                )}
+            </div>
             <div className="p-5 flex-grow">
                 <div className="flex justify-between items-start">
                     <h3 className="text-lg font-bold text-gray-800">{equipment.description}</h3>
