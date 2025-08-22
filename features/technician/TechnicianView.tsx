@@ -1,33 +1,44 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Reservation, Equipment, UserRole } from '../../types';
 import { apiService } from '../../services/apiService';
 import { PencilIcon, TrashIcon } from '../../components/icons/Icons';
 import ReservationFormModal from '../reservations/ReservationFormModal';
+import { getTechnicianColor } from '../../utils';
 
 const ReservationCard: React.FC<{
     reservation: Reservation,
     equipment?: Equipment,
+    technician?: User,
     currentUser: User,
     onEdit: () => void,
     onDelete: () => void
-}> = ({ reservation, equipment, currentUser, onEdit, onDelete }) => {
+}> = ({ reservation, equipment, technician, currentUser, onEdit, onDelete }) => {
     const pickupDate = new Date(reservation.pickupDate + 'T00:00:00');
     const returnDate = new Date(reservation.returnDate + 'T00:00:00');
     
     return (
         <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-brand-accent flex flex-col sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-grow">
-                <p className="text-lg font-bold text-gray-800">{equipment?.description || 'Loading...'}</p>
-                <p className="text-sm text-gray-500">{equipment?.gageId}</p>
-                <div className="text-left mt-2 sm:mt-0">
+                 <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <p className="text-lg font-bold text-gray-800">{equipment?.description || 'Loading...'}</p>
+                        <p className="text-sm text-gray-500">{equipment?.gageId}</p>
+                    </div>
+                    {technician && (
+                        <span className={`px-2 py-1 text-xs font-semibold text-white rounded-full ${getTechnicianColor(technician.id)}`}>
+                            {technician.name}
+                        </span>
+                    )}
+                </div>
+
+                <div className="text-left">
                     <p className="font-semibold text-gray-700">{reservation.company}</p>
                     <p className="text-sm text-gray-500">
                         {pickupDate.toLocaleDateString()} - {returnDate.toLocaleDateString()}
                     </p>
                 </div>
             </div>
-            <div className="flex items-start mt-4 sm:mt-0">
+            <div className="flex items-start mt-4 sm:mt-0 sm:ml-4">
                 {reservation.notes && (
                     <div className="p-3 bg-gray-50 rounded-md max-w-xs mr-4">
                         <p className="text-sm text-gray-600 font-semibold">Notes:</p>
@@ -52,48 +63,28 @@ const ReservationCard: React.FC<{
 const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null; onClearDateFilter: () => void; }> = ({ currentUser, selectedDate, onClearDateFilter }) => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [equipment, setEquipment] = useState<Equipment[]>([]);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [technicians, setTechnicians] = useState<User[]>([]);
-    const [selectedTechId, setSelectedTechId] = useState<string>(currentUser.role === UserRole.TECHNICIAN ? currentUser.id : '');
+    const [selectedTechId, setSelectedTechId] = useState<string>(currentUser.role === UserRole.TECHNICIAN ? currentUser.id : 'all');
     const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-    const fetchTechnicians = useCallback(async () => {
-        if (currentUser.role === UserRole.ADMIN) {
-            const allUsers = await apiService.getUsers();
-            const techUsers = allUsers.filter(u => u.role === UserRole.TECHNICIAN);
-            setTechnicians(techUsers);
-            if (techUsers.length > 0 && !selectedTechId) {
-                setSelectedTechId(techUsers[0].id);
-            }
-        }
-    }, [currentUser.role, selectedTechId]);
-
-    const fetchReservations = useCallback(async () => {
-        if (!selectedTechId) {
-            setLoading(false);
-            setReservations([]);
-            return;
-        }
+    const fetchAllData = useCallback(async () => {
         setLoading(true);
-        const resData = await apiService.getReservationsForTechnician(selectedTechId);
-        setReservations(resData);
-        setLoading(false);
-    }, [selectedTechId]);
-
-    const fetchEquipment = useCallback(async () => {
-        const eqData = await apiService.getEquipment();
+        const [resData, eqData, usersData] = await Promise.all([
+            apiService.getReservations(),
+            apiService.getEquipment(),
+            apiService.getUsers()
+        ]);
+        setReservations(resData.sort((a, b) => new Date(b.pickupDate).getTime() - new Date(a.pickupDate).getTime()));
         setEquipment(eqData);
+        setAllUsers(usersData);
+        setLoading(false);
     }, []);
 
     useEffect(() => {
-        fetchTechnicians();
-        fetchEquipment();
-    }, [fetchTechnicians, fetchEquipment]);
-    
-    useEffect(() => {
-        fetchReservations();
-    }, [fetchReservations]);
+        fetchAllData();
+    }, [fetchAllData]);
 
     const showNotification = (type: 'success' | 'error', message: string) => {
         setNotification({ type, message });
@@ -110,7 +101,7 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
             const result = await apiService.deleteReservation(reservation.id);
             if (result.success) {
                 showNotification('success', 'Reservation deleted successfully.');
-                fetchReservations();
+                fetchAllData();
             } else {
                 showNotification('error', 'Failed to delete reservation.');
             }
@@ -122,26 +113,32 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
         showNotification(result.success ? 'success' : 'error', result.message);
         if(result.success) {
             setEditingReservation(null);
-            fetchReservations();
+            fetchAllData();
         }
     }
 
     const getEquipmentById = (id: string) => equipment.find(e => e.id === id);
+    const getTechnicianById = (id: string) => allUsers.find(u => u.id === id);
 
     const displayedReservations = useMemo(() => {
+        const techFiltered = selectedTechId === 'all'
+            ? reservations
+            : reservations.filter(r => r.technicianId === selectedTechId);
+
         if (!selectedDate) {
-            return reservations;
+            return techFiltered;
         }
+
         const filterDate = new Date(selectedDate + 'T00:00:00');
         filterDate.setHours(0,0,0,0);
-        return reservations.filter(r => {
+        return techFiltered.filter(r => {
             const pickup = new Date(r.pickupDate + 'T00:00:00');
             const ret = new Date(r.returnDate + 'T00:00:00');
             pickup.setHours(0,0,0,0);
             ret.setHours(0,0,0,0);
             return filterDate >= pickup && filterDate <= ret;
         });
-    }, [reservations, selectedDate]);
+    }, [reservations, selectedDate, selectedTechId]);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -153,16 +150,12 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
         if (loading) {
             return <div className="text-center text-gray-500">Loading reservations...</div>;
         }
-
-        if (!selectedTechId && currentUser.role === UserRole.ADMIN && !selectedDate) {
-            return <div className="text-center text-gray-500 bg-white p-8 rounded-lg shadow-md">Please select a technician to view their reservations.</div>;
-        }
         
         if (displayedReservations.length === 0) {
             return <div className="text-center text-gray-500 bg-white p-8 rounded-lg shadow-md">
                 {selectedDate 
                     ? `No reservations found for this date.`
-                    : 'No reservations found for this technician.'}
+                    : 'No reservations found for the selected technician.'}
             </div>;
         }
 
@@ -173,7 +166,15 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                     {upcomingReservations.length > 0 ? (
                         <div className="space-y-4">
                             {upcomingReservations.map(res => (
-                                <ReservationCard key={res.id} reservation={res} equipment={getEquipmentById(res.equipmentId)} currentUser={currentUser} onEdit={() => handleEdit(res)} onDelete={() => handleDelete(res)} />
+                                <ReservationCard 
+                                    key={res.id} 
+                                    reservation={res} 
+                                    equipment={getEquipmentById(res.equipmentId)} 
+                                    technician={getTechnicianById(res.technicianId)}
+                                    currentUser={currentUser} 
+                                    onEdit={() => handleEdit(res)} 
+                                    onDelete={() => handleDelete(res)} 
+                                />
                             ))}
                         </div>
                     ) : (
@@ -185,7 +186,15 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                     {pastReservations.length > 0 ? (
                         <div className="space-y-4">
                             {pastReservations.map(res => (
-                                <ReservationCard key={res.id} reservation={res} equipment={getEquipmentById(res.equipmentId)} currentUser={currentUser} onEdit={() => handleEdit(res)} onDelete={() => handleDelete(res)} />
+                                <ReservationCard 
+                                    key={res.id} 
+                                    reservation={res} 
+                                    equipment={getEquipmentById(res.equipmentId)}
+                                    technician={getTechnicianById(res.technicianId)}
+                                    currentUser={currentUser} 
+                                    onEdit={() => handleEdit(res)} 
+                                    onDelete={() => handleDelete(res)} 
+                                />
                             ))}
                         </div>
                     ) : (
@@ -214,22 +223,22 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                     </button>
                 </div>
             )}
-            {currentUser.role === UserRole.ADMIN && (
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                    <label htmlFor="tech-select" className="block text-sm font-medium text-gray-700 mb-2">Select a Technician:</label>
-                    <select
-                        id="tech-select"
-                        value={selectedTechId}
-                        onChange={e => setSelectedTechId(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                    >
-                         <option value="" disabled>-- Select a Technician --</option>
-                        {technicians.map(tech => (
-                            <option key={tech.id} value={tech.id}>{tech.name}</option>
-                        ))}
-                    </select>
-                </div>
-            )}
+            
+            <div className="bg-white p-4 rounded-lg shadow-md">
+                <label htmlFor="tech-select" className="block text-sm font-medium text-gray-700 mb-2">View Reservations For:</label>
+                <select
+                    id="tech-select"
+                    value={selectedTechId}
+                    onChange={e => setSelectedTechId(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                >
+                    <option value="all">All Technicians</option>
+                    {allUsers.filter(u => u.role === UserRole.TECHNICIAN || u.role === UserRole.ADMIN).map(tech => (
+                        <option key={tech.id} value={tech.id}>{tech.name}</option>
+                    ))}
+                </select>
+            </div>
+
             {renderContent()}
             {editingReservation && (
                 <ReservationFormModal 

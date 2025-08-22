@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { User, Reservation, Equipment, User as Technician, UserRole } from '../../types';
 import { apiService } from '../../services/apiService';
 import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons/Icons';
+import { getTechnicianColor } from '../../utils';
 
 type ViewMode = 'week' | 'month';
 
@@ -13,21 +14,6 @@ interface HoveredData {
         y: number;
     };
 }
-
-const TECHNICIAN_COLORS = [
-    'bg-blue-500', 'bg-green-500', 'bg-indigo-500', 
-    'bg-purple-500', 'bg-pink-500', 'bg-yellow-600',
-    'bg-teal-500', 'bg-red-500'
-];
-
-const getTechnicianColor = (technicianId: string) => {
-    let hash = 0;
-    for (let i = 0; i < technicianId.length; i++) {
-        hash = technicianId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash % TECHNICIAN_COLORS.length);
-    return TECHNICIAN_COLORS[index];
-};
 
 const formatDate = (date: Date, format: 'long' | 'short' | 'day' | 'month-year') => {
     if (format === 'long') return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
