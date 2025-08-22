@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../../types';
+import { TECHNICIAN_COLORS } from '../../utils';
 
 interface UserFormModalProps {
     user: User | null;
@@ -13,6 +14,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSubmit }
         name: '',
         email: '',
         role: UserRole.TECHNICIAN,
+        color: TECHNICIAN_COLORS[0],
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,6 +27,10 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSubmit }
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+    
+    const handleColorChange = (color: string) => {
+        setFormData(prev => ({ ...prev, color }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -64,6 +70,22 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSubmit }
                             <option value={UserRole.ADMIN}>Admin</option>
                             <option value={UserRole.TECHNICIAN}>Technician</option>
                         </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Display Color</label>
+                        <div className="mt-2 flex flex-wrap gap-3">
+                            {TECHNICIAN_COLORS.map(colorClass => (
+                                <button
+                                    type="button"
+                                    key={colorClass}
+                                    onClick={() => handleColorChange(colorClass)}
+                                    className={`w-8 h-8 rounded-full ${colorClass} cursor-pointer transition-transform transform hover:scale-110 ${
+                                        formData.color === colorClass ? 'ring-2 ring-offset-2 ring-brand-primary' : ''
+                                    }`}
+                                    aria-label={`Select color ${colorClass}`}
+                                />
+                            ))}
+                        </div>
                     </div>
 
                     <div className="mt-8 flex justify-end space-x-3">

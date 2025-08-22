@@ -37,6 +37,7 @@ export interface User {
   email?: string;
   role: UserRole;
   password?: string;
+  color?: string;
 }
 
 export type Tab = 'CALENDAR' | 'EQUIPMENT' | 'TECHNICIAN' | 'COMPANY' | 'ADMIN';

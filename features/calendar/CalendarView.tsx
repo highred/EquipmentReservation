@@ -170,7 +170,7 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                                 onClick={() => onDayClick(formatDate(pickup, 'short'))}
                                 onMouseEnter={(e) => handleMouseEnter([res], e)}
                                 onMouseLeave={handleMouseLeave}
-                                className={`col-start-1 row-start-1 mt-2 mx-1 p-2 rounded-lg text-white text-xs ${getTechnicianColor(tech.id)} hover:opacity-80 transition-opacity cursor-pointer text-left`}
+                                className={`col-start-1 row-start-1 mt-2 mx-1 p-2 rounded-lg text-white text-xs ${getTechnicianColor(tech)} hover:opacity-80 transition-opacity cursor-pointer text-left`}
                                 style={{
                                     gridColumnStart: startIndex + 1,
                                     gridColumnEnd: `span ${duration}`,
@@ -223,7 +223,7 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                                         onClick={() => onDayClick(formatDate(day, 'short'))}
                                         onMouseEnter={(e) => handleMouseEnter(techReservations, e)}
                                         onMouseLeave={handleMouseLeave}
-                                        className={`w-full text-left px-1 py-0.5 text-xs text-white rounded ${getTechnicianColor(tech.id)} hover:opacity-80 transition-opacity cursor-pointer truncate`}
+                                        className={`w-full text-left px-1 py-0.5 text-xs text-white rounded ${getTechnicianColor(tech)} hover:opacity-80 transition-opacity cursor-pointer truncate`}
                                     >
                                         {tech.name}
                                     </button>

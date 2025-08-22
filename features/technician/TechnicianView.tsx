@@ -27,7 +27,7 @@ const ReservationCard: React.FC<{
                         <p className="text-sm text-gray-500">{equipment?.gageId}</p>
                     </div>
                     {technician && (
-                        <span className={`px-2 py-1 text-xs font-semibold text-white rounded-full ${getTechnicianColor(technician.id)}`}>
+                        <span className={`px-2 py-1 text-xs font-semibold text-white rounded-full ${getTechnicianColor(technician)}`}>
                             {technician.name}
                         </span>
                     )}

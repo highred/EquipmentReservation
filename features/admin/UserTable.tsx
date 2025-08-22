@@ -28,7 +28,10 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, onSetPas
                     {users.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                <div className="flex items-center">
+                                    <div className={`w-4 h-4 rounded-full mr-3 ${user.color || 'bg-gray-200'}`}></div>
+                                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-600">{user.email}</div>

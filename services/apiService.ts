@@ -1,10 +1,11 @@
 import { Equipment, Reservation, User, UserRole, StagingItem, Company } from '../types';
+import { TECHNICIAN_COLORS } from '../utils';
 
 // --- MOCK DATA ---
 let users: User[] = [
-    { id: '11111111-1111-1111-1111-111111111111', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN, password: 'password' },
-    { id: '22222222-2222-2222-2222-222222222222', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
-    { id: '33333333-3333-3333-3333-333333333333', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN, password: 'password' },
+    { id: '11111111-1111-1111-1111-111111111111', name: 'Mike Smith (Admin)', email: 'mike@atiquality.com', role: UserRole.ADMIN, password: 'password', color: 'bg-red-500' },
+    { id: '22222222-2222-2222-2222-222222222222', name: 'Bob (Technician)', email: 'bob@atiquality.com', role: UserRole.TECHNICIAN, password: 'password', color: 'bg-blue-500' },
+    { id: '33333333-3333-3333-3333-333333333333', name: 'Charlie (Technician)', email: 'charlie@atiquality.com', role: UserRole.TECHNICIAN, password: 'password', color: 'bg-green-500' },
 ];
 
 let companies: Company[] = [
@@ -89,10 +90,12 @@ class ApiService {
         if (users.some(u => u.email && u.email.toLowerCase() === userData.email?.toLowerCase())) {
             return { success: false, message: `User with email "${userData.email}" already exists.` };
         }
+        const assignedColor = userData.color || TECHNICIAN_COLORS[users.length % TECHNICIAN_COLORS.length];
         const newUser: User = {
             id: crypto.randomUUID(),
             ...userData,
             password: '', 
+            color: assignedColor,
         };
         users.push(newUser);
         const { password, ...userToReturn } = newUser;
@@ -107,7 +110,7 @@ class ApiService {
                 return { success: false, message: `Another user with email "${updatedUser.email}" already exists.` };
             }
             const existingPassword = users[index].password;
-            users[index] = { ...updatedUser, password: existingPassword };
+            users[index] = { ...users[index], ...updatedUser, password: existingPassword };
             return { success: true, message: "User updated successfully." };
         }
         return { success: false, message: "Could not find user to update." };
