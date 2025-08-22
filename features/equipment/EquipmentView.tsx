@@ -201,15 +201,18 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         }
     };
 
-    const handleImportComplete = (result: { successCount: number; errors: any[] }) => {
-        const { successCount, errors } = result;
-        let message = `Import complete: ${successCount} items successfully added.`;
+    const handleImportComplete = (result: { createdCount: number; updatedCount: number; errors: any[] }) => {
+        const { createdCount, updatedCount, errors } = result;
+        const successCount = createdCount + updatedCount;
+        let message = `Import complete: ${createdCount} items added, ${updatedCount} items updated.`;
+
         if (errors.length > 0) {
             message += ` ${errors.length} items failed.`;
             // Log errors for debugging, they are displayed in the modal
             console.error("Import errors:", errors);
         }
         showNotification(errors.length > 0 ? 'warning' : 'success', message);
+        
         if (successCount > 0) {
             fetchEquipment();
         }
@@ -241,7 +244,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             className="flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300"
                         >
                             <UploadIcon className="w-5 h-5 mr-2" />
-                            Import from CSV
+                            Import / Update
                         </button>
                         <button
                             onClick={handleAddEquipment}

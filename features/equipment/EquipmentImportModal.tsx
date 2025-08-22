@@ -5,7 +5,7 @@ import { Equipment } from '../../types';
 
 interface EquipmentImportModalProps {
     onClose: () => void;
-    onImportComplete: (result: { successCount: number; errors: any[] }) => void;
+    onImportComplete: (result: { createdCount: number; updatedCount: number; errors: any[] }) => void;
 }
 
 const REQUIRED_HEADERS = ['gageId', 'description', 'manufacturer', 'model', 'range', 'uom', 'dueDate'];
@@ -14,7 +14,7 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
     const [file, setFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [parseError, setParseError] = useState<string | null>(null);
-    const [importResult, setImportResult] = useState<{ successCount: number; errors: any[] } | null>(null);
+    const [importResult, setImportResult] = useState<{ createdCount: number; updatedCount: number; errors: any[] } | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFile(e.target.files ? e.target.files[0] : null);
@@ -65,7 +65,7 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
                      return;
                 }
 
-                const result = await apiService.bulkAddEquipment(validData);
+                const result = await apiService.bulkUpsertEquipment(validData);
                 setImportResult(result);
                 onImportComplete(result);
                 setIsSubmitting(false);
@@ -86,7 +86,7 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl m-4">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Import Equipment from CSV</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Import & Update Equipment from CSV</h2>
                     <button onClick={handleClose} className="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
                 </div>
                 
@@ -94,8 +94,9 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
                     <div>
                         <h3 className="font-semibold text-gray-700 mb-2">Instructions:</h3>
                         <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 bg-gray-50 p-4 rounded-md">
+                            <li>If a <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> in the file matches an existing item, its details will be updated.</li>
+                            <li>If a <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> does not exist, a new equipment item will be created.</li>
                             <li>Your CSV file must contain the following headers: <code className="text-xs bg-gray-200 p-1 rounded">{REQUIRED_HEADERS.join(', ')}</code></li>
-                            <li>The <code className="text-xs bg-gray-200 p-1 rounded">gageId</code> must be unique for each item.</li>
                             <li>The <code className="text-xs bg-gray-200 p-1 rounded">dueDate</code> should be in YYYY-MM-DD format.</li>
                             <li>
                                 <button onClick={handleDownloadTemplate} className="text-brand-primary hover:underline font-semibold">
@@ -122,7 +123,7 @@ const EquipmentImportModal: React.FC<EquipmentImportModalProps> = ({ onClose, on
                         <div className="p-4 rounded-md bg-gray-50">
                             <h3 className="font-semibold text-gray-800">Import Results</h3>
                              <p className={`text-sm ${importResult.errors.length > 0 ? 'text-yellow-800' : 'text-green-800'}`}>
-                                Successfully imported {importResult.successCount} items.
+                                Import complete: {importResult.createdCount} items added, {importResult.updatedCount} items updated.
                                 {importResult.errors.length > 0 && ` Failed to import ${importResult.errors.length} items.`}
                             </p>
                             {importResult.errors.length > 0 && (

@@ -149,38 +149,53 @@ class ApiService {
         return { success: true, message: 'Equipment added successfully.', equipment: newEquipment };
     }
 
-    async bulkAddEquipment(newEquipmentList: Omit<Equipment, 'id'>[]): Promise<{ successCount: number; errors: { rowData: any; message: string }[] }> {
+    async bulkUpsertEquipment(equipmentList: Omit<Equipment, 'id'>[]): Promise<{ createdCount: number; updatedCount: number; errors: { rowData: any; message: string }[] }> {
         await this.simulateLatency(1500);
-        
+
         const errors: { rowData: any, message: string }[] = [];
-        let successCount = 0;
-        
-        const existingGageIds = new Set(equipment.map(e => e.gageId.toLowerCase()));
+        let createdCount = 0;
+        let updatedCount = 0;
+
         const incomingGageIds = new Set<string>();
 
-        for (const item of newEquipmentList) {
+        for (const item of equipmentList) {
+            if (!item.gageId) {
+                errors.push({ rowData: item, message: `Missing Gage ID.` });
+                continue;
+            }
             const gageIdLower = item.gageId.toLowerCase();
 
+            // Check for duplicates within the import file
             if (incomingGageIds.has(gageIdLower)) {
                 errors.push({ rowData: item, message: `Duplicate Gage ID "${item.gageId}" within the import file.` });
                 continue;
             }
-
-            if (existingGageIds.has(gageIdLower)) {
-                errors.push({ rowData: item, message: `Gage ID "${item.gageId}" already exists in the system.` });
-                continue;
-            }
-
-            const newEquipment: Equipment = {
-                id: `eq-${Date.now()}-${Math.random()}`,
-                ...item,
-            };
-            equipment.push(newEquipment);
             incomingGageIds.add(gageIdLower);
-            successCount++;
+
+            // Check if equipment already exists in the system
+            const existingEquipmentIndex = equipment.findIndex(e => e.gageId.toLowerCase() === gageIdLower);
+
+            if (existingEquipmentIndex > -1) {
+                // Update existing equipment
+                const existingEquipment = equipment[existingEquipmentIndex];
+                equipment[existingEquipmentIndex] = {
+                    ...existingEquipment,
+                    ...item, // Overwrite existing fields with new values from the CSV
+                    gageId: existingEquipment.gageId // Ensure case of original Gage ID is preserved
+                };
+                updatedCount++;
+            } else {
+                // Create new equipment
+                const newEquipment: Equipment = {
+                    id: `eq-${Date.now()}-${Math.random()}`,
+                    ...item,
+                };
+                equipment.push(newEquipment);
+                createdCount++;
+            }
         }
 
-        return { successCount, errors };
+        return { createdCount, updatedCount, errors };
     }
 
     async updateEquipment(updatedEquipment: Equipment): Promise<{ success: boolean; message: string }> {
