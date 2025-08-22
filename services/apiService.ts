@@ -246,7 +246,9 @@ class ApiService {
             const newPickup = new Date(pickupDate);
             const newReturn = new Date(returnDate);
 
-            return (newPickup < existingReturn && newReturn > existingPickup);
+            // Check for inclusive overlap. A new reservation cannot start on or before the day an existing one ends,
+            // and it cannot end on or after the day an existing one starts.
+            return (newPickup <= existingReturn && newReturn >= existingPickup);
         });
 
         if (isDoubleBooked) {
@@ -268,6 +270,7 @@ class ApiService {
         const { equipmentId, pickupDate, returnDate, id } = updatedReservation;
 
         const isDoubleBooked = reservations.some(r => {
+            // Don't compare the reservation against itself
             if (r.id === id) return false;
             if (r.equipmentId !== equipmentId) return false;
             
@@ -276,7 +279,8 @@ class ApiService {
             const newPickup = new Date(pickupDate);
             const newReturn = new Date(returnDate);
 
-            return (newPickup < existingReturn && newReturn > existingPickup);
+             // Check for inclusive overlap.
+            return (newPickup <= existingReturn && newReturn >= existingPickup);
         });
 
         if (isDoubleBooked) {
