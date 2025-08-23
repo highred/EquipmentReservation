@@ -40,7 +40,7 @@ export interface User {
   color?: string;
 }
 
-export type Tab = 'CALENDAR' | 'EQUIPMENT' | 'TECHNICIAN' | 'COMPANY' | 'ADMIN';
+export type Tab = 'CALENDAR' | 'EQUIPMENT' | 'TECHNICIAN' | 'COMPANY' | 'ADMIN' | 'STAGING';
 
 export interface StagingItem extends Reservation {
     equipment: Equipment;

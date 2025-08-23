@@ -8,6 +8,7 @@ import EquipmentView from './features/equipment/EquipmentView';
 import TechnicianView from './features/technician/TechnicianView';
 import CompanyView from './features/company/CompanyView';
 import AdminView from './features/admin/AdminView';
+import StagingView from './features/staging/StagingView';
 import LoginScreen from './features/auth/LoginScreen';
 
 const TABS: { id: Tab; label: string; roles: UserRole[] }[] = [
@@ -15,6 +16,7 @@ const TABS: { id: Tab; label: string; roles: UserRole[] }[] = [
     { id: 'EQUIPMENT', label: 'Equipment', roles: [UserRole.ADMIN, UserRole.TECHNICIAN] },
     { id: 'TECHNICIAN', label: 'My Reservations', roles: [UserRole.TECHNICIAN, UserRole.ADMIN] },
     { id: 'COMPANY', label: 'Companies', roles: [UserRole.ADMIN, UserRole.TECHNICIAN] },
+    { id: 'STAGING', label: 'Staging', roles: [UserRole.ADMIN] },
     { id: 'ADMIN', label: 'Admin', roles: [UserRole.ADMIN] },
 ];
 
@@ -45,7 +47,7 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const fetchAllUsers = async () => {
-             if (currentUser?.role === UserRole.ADMIN) {
+             if (currentUser) { // Fetch for all logged in users, staging view needs it too
                 const fetchedUsers = await apiService.getUsers();
                 setAllUsers(fetchedUsers);
             }
@@ -123,6 +125,9 @@ const App: React.FC = () => {
                 return <TechnicianView currentUser={effectiveUser} selectedDate={selectedDateForTechView} onClearDateFilter={() => setSelectedDateForTechView(null)} />;
             case 'COMPANY':
                 return <CompanyView currentUser={effectiveUser} />;
+            case 'STAGING':
+                if (loggedInUser?.role !== UserRole.ADMIN) return null; // Defensive check
+                return <StagingView users={allUsers} />;
             case 'ADMIN':
                 if (loggedInUser?.role !== UserRole.ADMIN) return null; // Defensive check
                 return <AdminView currentUser={effectiveUser} onDataUpdate={handleDataUpdate} />;
