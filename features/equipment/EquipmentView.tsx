@@ -6,6 +6,7 @@ import BookEquipmentModal from './BookEquipmentModal';
 import BatchBookEquipmentModal from './BatchBookEquipmentModal';
 import EquipmentFormModal from './EquipmentFormModal';
 import EquipmentImportModal from './EquipmentImportModal';
+import Chatbot from '../chatbot/Chatbot';
 import { PencilIcon, TrashIcon, PlusIcon, CloneIcon, UploadIcon, PhotoIcon } from '../../components/icons/Icons';
 
 const EquipmentCard: React.FC<{
@@ -83,6 +84,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -104,14 +106,16 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     
     const fetchAllData = useCallback(async () => {
         setLoading(true);
-        const [eqData, usersData, companyData] = await Promise.all([
+        const [eqData, usersData, companyData, resData] = await Promise.all([
             apiService.getEquipment(),
             apiService.getUsers(),
-            apiService.getCompanies()
+            apiService.getCompanies(),
+            apiService.getReservations(), // Fetch all reservations for chatbot context
         ]);
         setEquipmentList(eqData);
         setUsers(usersData);
         setCompanies(companyData);
+        setReservations(resData);
         if (companyData.length > 0 && !lastCompanyId) {
             setLastCompanyId(companyData[0].id);
         }
@@ -175,6 +179,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             setLastReturnDate(returnDate);
             setLastCompanyId(reservation.companyId);
             handleCloseBookingModal();
+            fetchAllData(); // Re-fetch to update chatbot context
         }
         
         return result;
@@ -230,6 +235,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 setLastCompanyId(reservationsData[0].companyId);
             }
             handleCloseBatchBookingModal();
+            fetchAllData(); // Re-fetch to update chatbot context
         }
         
         return { success: result.success, message: result.message };
@@ -400,6 +406,7 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             
             {isEqFormModalOpen && <EquipmentFormModal equipment={editingEquipment} onClose={() => { setIsEqFormModalOpen(false); setEditingEquipment(null); }} onSubmit={handleEqFormSubmit} />}
             {isImportModalOpen && <EquipmentImportModal onClose={() => setIsImportModalOpen(false)} onImportComplete={handleImportComplete} />}
+            {!loading && <Chatbot equipmentList={equipmentList} reservations={reservations} companies={companies} />}
         </div>
     );
 };

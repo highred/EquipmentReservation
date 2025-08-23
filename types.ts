@@ -47,3 +47,8 @@ export interface StagingItem extends Reservation {
     user: User;
     company: Company;
 }
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+}
