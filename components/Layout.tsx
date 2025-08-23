@@ -29,7 +29,7 @@ const ICONS: Record<Tab, React.ReactNode> = {
 const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange, currentUser, viewAsUser, users, onUserChange, onLogout, theme, onThemeToggle }) => {
     return (
         <div className="min-h-screen font-sans">
-            <header className="bg-brand-primary dark:bg-gray-900 dark:border-b dark:border-gray-700 shadow-lg print:hidden">
+            <header className="sticky top-0 z-30 bg-brand-primary dark:bg-gray-900 dark:border-b dark:border-gray-700 shadow-lg print:hidden">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         <div className="flex items-center">

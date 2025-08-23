@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Reservation, Equipment, UserRole, Company } from '../../types';
 import { apiService } from '../../services/apiService';
-import { PencilIcon, TrashIcon } from '../../components/icons/Icons';
+import { PencilIcon, TrashIcon, ChevronRightIcon } from '../../components/icons/Icons';
 import ReservationFormModal from '../reservations/ReservationFormModal';
 import { getTechnicianColor } from '../../utils';
 
@@ -71,6 +71,7 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
     const [selectedTechId, setSelectedTechId] = useState<string>(currentUser.role === UserRole.TECHNICIAN ? currentUser.id : 'all');
     const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [isPastReservationsOpen, setIsPastReservationsOpen] = useState(false);
 
     const fetchAllData = useCallback(async () => {
         setLoading(true);
@@ -195,24 +196,36 @@ const TechnicianView: React.FC<{ currentUser: User; selectedDate: string | null;
                     )}
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Past Reservations</h2>
-                    {pastReservations.length > 0 ? (
-                        <div className="space-y-4">
-                            {pastReservations.map(res => (
-                                <ReservationCard 
-                                    key={res.id} 
-                                    reservation={res} 
-                                    equipment={getEquipmentById(res.equipmentId)}
-                                    technician={getTechnicianById(res.technicianId)}
-                                    companyName={companyMap.get(res.companyId) || 'Unknown Company'}
-                                    currentUser={currentUser} 
-                                    onEdit={() => handleEdit(res)} 
-                                    onDelete={() => handleDelete(res)} 
-                                />
-                            ))}
+                    <button
+                        onClick={() => setIsPastReservationsOpen(prev => !prev)}
+                        className="w-full flex justify-between items-center text-left text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+                        aria-expanded={isPastReservationsOpen}
+                        aria-controls="past-reservations-section"
+                    >
+                        <span>Past Reservations ({pastReservations.length})</span>
+                        <ChevronRightIcon className={`w-6 h-6 transition-transform duration-200 ${isPastReservationsOpen ? 'rotate-90' : ''}`} />
+                    </button>
+                    {isPastReservationsOpen && (
+                        <div id="past-reservations-section" className="pl-2">
+                             {pastReservations.length > 0 ? (
+                                <div className="space-y-4">
+                                    {pastReservations.map(res => (
+                                        <ReservationCard 
+                                            key={res.id} 
+                                            reservation={res} 
+                                            equipment={getEquipmentById(res.equipmentId)}
+                                            technician={getTechnicianById(res.technicianId)}
+                                            companyName={companyMap.get(res.companyId) || 'Unknown Company'}
+                                            currentUser={currentUser} 
+                                            onEdit={() => handleEdit(res)} 
+                                            onDelete={() => handleDelete(res)} 
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 dark:text-gray-400 italic">No past reservations.</p>
+                            )}
                         </div>
-                    ) : (
-                        <p className="text-gray-500 dark:text-gray-400 italic">No past reservations.</p>
                     )}
                 </div>
             </>
