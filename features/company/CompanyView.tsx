@@ -59,18 +59,18 @@ const CompanyView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
 
     if (loading) {
-        return <div className="text-center p-8 text-gray-500">Loading company data...</div>;
+        return <div className="text-center p-8 text-gray-500 dark:text-gray-400">Loading company data...</div>;
     }
 
     return (
         <div className="space-y-6">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-                <label htmlFor="company-select" className="block text-lg font-bold text-gray-800 mb-2">Select a Company</label>
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <label htmlFor="company-select" className="block text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Select a Company</label>
                 <select
                     id="company-select"
                     value={selectedCompanyId}
                     onChange={e => setSelectedCompanyId(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                     {companies.map(company => (
                         <option key={company.id} value={company.id}>{company.name}</option>
@@ -81,15 +81,15 @@ const CompanyView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             {companyEquipmentHistory.length > 0 ? (
                 <div className="space-y-4">
                     {companyEquipmentHistory.map(({ equipment, reservations }) => (
-                        <div key={equipment.id} className="bg-white p-5 rounded-lg shadow">
-                            <h3 className="text-xl font-bold text-gray-800">{equipment.description} ({equipment.gageId})</h3>
-                            <p className="text-sm text-gray-500 mb-4">{equipment.manufacturer} - {equipment.model}</p>
+                        <div key={equipment.id} className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow">
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{equipment.description} ({equipment.gageId})</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{equipment.manufacturer} - {equipment.model}</p>
                             
-                            <div className="border-t pt-3">
-                                <h4 className="font-semibold text-gray-700 mb-2">Booking History:</h4>
+                            <div className="border-t dark:border-gray-700 pt-3">
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Booking History:</h4>
                                 <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
                                     {reservations.map(res => (
-                                        <li key={res.id} className="text-sm p-2 bg-gray-50 rounded-md">
+                                        <li key={res.id} className="text-sm p-2 bg-gray-50 dark:bg-gray-700/50 rounded-md">
                                             <span className="font-semibold">{getUserName(res.technicianId)}</span> booked from <span className="font-semibold">{new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()}</span> to <span className="font-semibold">{new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}</span>
                                         </li>
                                     ))}
@@ -99,9 +99,9 @@ const CompanyView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-10 bg-white rounded-lg shadow-md">
-                    <h3 className="text-lg font-semibold text-gray-700">No Booking History</h3>
-                    <p className="text-gray-500">This company has not booked any equipment yet.</p>
+                <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No Booking History</h3>
+                    <p className="text-gray-500 dark:text-gray-400">This company has not booked any equipment yet.</p>
                 </div>
             )}
         </div>

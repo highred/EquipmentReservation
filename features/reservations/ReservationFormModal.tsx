@@ -47,25 +47,25 @@ const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-lg m-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-lg m-4">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Edit Reservation</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Edit Reservation</h2>
+                    <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-3xl font-bold">&times;</button>
                 </div>
                 <div>
-                    <p className="text-lg font-semibold">{equipment.description}</p>
-                    <p className="text-sm text-gray-500 mb-6">{equipment.gageId}</p>
+                    <p className="text-lg font-semibold dark:text-gray-200">{equipment.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{equipment.gageId}</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="companyId" className="block text-sm font-medium text-gray-700">Company</label>
+                        <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
                         <select
                             name="companyId"
                             id="companyId"
                             value={formData.companyId}
                             onChange={handleChange}
                             required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         >
                             {companies.map(comp => (
                                 <option key={comp.id} value={comp.id}>{comp.name}</option>
@@ -74,22 +74,22 @@ const ReservationFormModal: React.FC<ReservationFormModalProps> = ({ reservation
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="pickupDate" className="block text-sm font-medium text-gray-700">Pickup Date</label>
-                            <input type="date" name="pickupDate" value={formData.pickupDate} onChange={handleChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"/>
+                            <label htmlFor="pickupDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Pickup Date</label>
+                            <input type="date" name="pickupDate" value={formData.pickupDate} onChange={handleChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:[color-scheme:dark]"/>
                         </div>
                         <div>
-                            <label htmlFor="returnDate" className="block text-sm font-medium text-gray-700">Return Date</label>
-                            <input type="date" name="returnDate" value={formData.returnDate} onChange={handleChange} min={formData.pickupDate} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"/>
+                            <label htmlFor="returnDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Return Date</label>
+                            <input type="date" name="returnDate" value={formData.returnDate} onChange={handleChange} min={formData.pickupDate} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:[color-scheme:dark]"/>
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes for Coordinator</label>
-                        <textarea name="notes" value={formData.notes} onChange={handleChange} rows={3} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent"></textarea>
+                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes for Coordinator</label>
+                        <textarea name="notes" value={formData.notes} onChange={handleChange} rows={3} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-accent focus:border-brand-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
                     </div>
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                    {error && <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>}
                     <div className="mt-8 flex justify-end space-x-3">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
-                        <button type="submit" disabled={isSubmitting} className="bg-brand-primary text-white font-bold py-2 px-4 rounded-md hover:bg-blue-800 transition-colors disabled:bg-gray-400">
+                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                        <button type="submit" disabled={isSubmitting} className="bg-brand-primary text-white font-bold py-2 px-4 rounded-md hover:bg-blue-800 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-500">
                             {isSubmitting ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>

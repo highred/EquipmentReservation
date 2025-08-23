@@ -21,30 +21,30 @@ const EquipmentCard: React.FC<{
 }> = ({ equipment, currentUser, onBook, onEdit, onClone, onDelete, isBatchMode, isSelected, onSelectToggle }) => {
     return (
         <div
-            className={`relative bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${isBatchMode ? 'cursor-pointer' : ''} ${isSelected ? 'ring-2 ring-brand-primary' : ''}`}
+            className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${isBatchMode ? 'cursor-pointer' : ''} ${isSelected ? 'ring-2 ring-brand-primary dark:ring-brand-accent' : ''}`}
             onClick={isBatchMode ? onSelectToggle : undefined}
             role={isBatchMode ? 'checkbox' : undefined}
             aria-checked={isBatchMode ? isSelected : undefined}
         >
             {isBatchMode && (
-                <div className={`absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-brand-primary' : 'bg-white border-2 border-gray-300'}`}>
+                <div className={`absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-brand-primary' : 'bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-500'}`}>
                     {isSelected && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                 </div>
             )}
-            <div className="h-40 bg-gray-200 flex items-center justify-center">
+            <div className="h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                 {equipment.imageUrl ? (
                     <img src={equipment.imageUrl} alt={equipment.description} className="w-full h-full object-cover" />
                 ) : (
-                    <PhotoIcon className="w-16 h-16 text-gray-400" />
+                    <PhotoIcon className="w-16 h-16 text-gray-400 dark:text-gray-500" />
                 )}
             </div>
             <div className="p-5 flex-grow">
                 <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-bold text-gray-800">{equipment.description}</h3>
-                    <span className="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{equipment.gageId}</span>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{equipment.description}</h3>
+                    <span className="text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-1 rounded-full">{equipment.gageId}</span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{equipment.manufacturer} - {equipment.model}</p>
-                <div className="mt-4 space-y-2 text-sm text-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{equipment.manufacturer} - {equipment.model}</p>
+                <div className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
                     <div className="flex justify-between">
                         <span className="font-semibold">Range:</span>
                         <span>{equipment.range} {equipment.uom}</span>
@@ -52,7 +52,7 @@ const EquipmentCard: React.FC<{
                 </div>
             </div>
             {!isBatchMode && (
-                <div className="bg-gray-50 p-4 flex items-center justify-between">
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 flex items-center justify-between">
                     <button
                         onClick={onBook}
                         title={'Book this equipment'}
@@ -62,13 +62,13 @@ const EquipmentCard: React.FC<{
                     </button>
                     {currentUser.role === UserRole.ADMIN && (
                         <div className="flex items-center space-x-2 ml-3">
-                            <button onClick={onClone} className="p-2 text-gray-500 hover:text-brand-secondary transition-colors" aria-label="Clone Equipment">
+                            <button onClick={onClone} className="p-2 text-gray-500 dark:text-gray-400 hover:text-brand-secondary transition-colors" aria-label="Clone Equipment">
                                 <CloneIcon className="w-5 h-5" />
                             </button>
-                            <button onClick={onEdit} className="p-2 text-gray-500 hover:text-brand-primary transition-colors" aria-label="Edit Equipment">
+                            <button onClick={onEdit} className="p-2 text-gray-500 dark:text-gray-400 hover:text-brand-primary transition-colors" aria-label="Edit Equipment">
                                 <PencilIcon className="w-5 h-5" />
                             </button>
-                            <button onClick={onDelete} className="p-2 text-gray-500 hover:text-status-danger transition-colors" aria-label="Delete Equipment">
+                            <button onClick={onDelete} className="p-2 text-gray-500 dark:text-gray-400 hover:text-status-danger transition-colors" aria-label="Delete Equipment">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -295,18 +295,18 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         <div>
             {notification && (
                 <div className={`p-4 mb-4 rounded-md ${
-                    notification.type === 'success' ? 'bg-green-100 text-green-800' :
-                    notification.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
+                    notification.type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200' :
+                    notification.type === 'warning' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200' :
+                    'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
                 }`}>
                     {notification.message}
                 </div>
             )}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4 items-center">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4 items-center">
                 <input
                     type="text"
                     placeholder="Search equipment..."
-                    className="w-full md:flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                    className="w-full md:flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
@@ -327,11 +327,11 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 </div>
             </div>
 
-            {loading ? <div className="text-center text-gray-500">Loading equipment...</div> : (
+            {loading ? <div className="text-center text-gray-500 dark:text-gray-400">Loading equipment...</div> : (
                 <div className="space-y-8">
                     {Object.entries(groupedEquipment).sort(([a], [b]) => a.localeCompare(b)).map(([description, items]) => (
                         <div key={description}>
-                            <h2 className="text-xl font-bold text-gray-700 border-b-2 border-brand-light pb-2 mb-4">{description}</h2>
+                            <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 border-b-2 border-brand-light dark:border-gray-700 pb-2 mb-4">{description}</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {items.sort((a,b) => a.gageId.localeCompare(b.gageId)).map(eq => (
                                     <EquipmentCard
@@ -351,20 +351,20 @@ const EquipmentView: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         </div>
                     ))}
                     {filteredEquipment.length === 0 && !loading && (
-                        <div className="text-center py-10 bg-gray-50 rounded-lg">
-                            <h3 className="text-lg font-semibold text-gray-700">No Equipment Found</h3>
-                            <p className="text-gray-500">Try adjusting your search term.</p>
+                        <div className="text-center py-10 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No Equipment Found</h3>
+                            <p className="text-gray-500 dark:text-gray-400">Try adjusting your search term.</p>
                         </div>
                     )}
                 </div>
             )}
             
             {batchSelectMode && selectedEquipmentIds.size > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-brand-primary text-white p-4 shadow-lg z-40 flex justify-between items-center">
+                <div className="fixed bottom-0 left-0 right-0 bg-brand-primary dark:bg-gray-800 text-white p-4 shadow-lg z-40 flex justify-between items-center">
                     <span className="font-bold text-lg">{selectedEquipmentIds.size} item(s) selected</span>
                     <div className="space-x-4">
                         <button onClick={() => setSelectedEquipmentIds(new Set())} className="font-semibold hover:underline">Clear Selection</button>
-                        <button onClick={() => setIsBatchBookingModalOpen(true)} className="bg-white text-brand-primary font-bold py-2 px-6 rounded-md hover:bg-gray-200 transition-colors">
+                        <button onClick={() => setIsBatchBookingModalOpen(true)} className="bg-white text-brand-primary dark:text-gray-800 dark:hover:bg-gray-300 font-bold py-2 px-6 rounded-md hover:bg-gray-200 transition-colors">
                             Book Selected
                         </button>
                     </div>

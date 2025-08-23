@@ -24,9 +24,24 @@ const App: React.FC = () => {
     const [viewAsUser, setViewAsUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('CALENDAR');
     const [selectedDateForTechView, setSelectedDateForTechView] = useState<string | null>(null);
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (localStorage.getItem('theme') === 'dark') return 'dark';
+        if (localStorage.getItem('theme') === 'light') return 'light';
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    });
 
     const loggedInUser = currentUser;
     const effectiveUser = viewAsUser || currentUser;
+
+    useEffect(() => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [theme]);
 
     useEffect(() => {
         const fetchAllUsers = async () => {
@@ -39,6 +54,10 @@ const App: React.FC = () => {
             fetchAllUsers();
         }
     }, [currentUser]);
+
+    const handleThemeToggle = () => {
+        setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    };
 
     const handleLogin = (user: User) => {
         setCurrentUser(user);
@@ -126,6 +145,8 @@ const App: React.FC = () => {
             users={allUsers}
             onUserChange={handleUserChange}
             onLogout={handleLogout}
+            theme={theme}
+            onThemeToggle={handleThemeToggle}
         >
             {renderContent()}
         </Layout>

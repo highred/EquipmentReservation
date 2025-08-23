@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tab, User, UserRole } from '../types';
-import { CalendarIcon, CogIcon, UserIcon, WrenchScrewdriverIcon, LogoutIcon, BuildingOfficeIcon } from './icons/Icons';
+import { CalendarIcon, CogIcon, UserIcon, WrenchScrewdriverIcon, LogoutIcon, BuildingOfficeIcon, MoonIcon, SunIcon } from './icons/Icons';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -13,6 +13,8 @@ interface LayoutProps {
     users: User[];
     onUserChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
     onLogout: () => void;
+    theme: 'light' | 'dark';
+    onThemeToggle: () => void;
 }
 
 const ICONS: Record<Tab, React.ReactNode> = {
@@ -23,10 +25,10 @@ const ICONS: Record<Tab, React.ReactNode> = {
     ADMIN: <CogIcon className="w-5 h-5 mr-2" />,
 };
 
-const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange, currentUser, viewAsUser, users, onUserChange, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange, currentUser, viewAsUser, users, onUserChange, onLogout, theme, onThemeToggle }) => {
     return (
-        <div className="min-h-screen bg-gray-100 font-sans">
-            <header className="bg-brand-primary shadow-lg print:hidden">
+        <div className="min-h-screen font-sans">
+            <header className="bg-brand-primary dark:bg-gray-900 dark:border-b dark:border-gray-700 shadow-lg print:hidden">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         <div className="flex items-center">
@@ -43,7 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange,
                                         id="user-select"
                                         value={viewAsUser?.id || currentUser.id}
                                         onChange={onUserChange}
-                                        className="bg-brand-secondary border border-brand-accent rounded-md py-1 px-2 focus:outline-none focus:ring-2 focus:ring-brand-light"
+                                        className="bg-brand-secondary dark:bg-gray-700 border border-brand-accent dark:border-gray-600 rounded-md py-1 px-2 focus:outline-none focus:ring-2 focus:ring-brand-light"
                                     >
                                         <option key={currentUser.id} value={currentUser.id}>{currentUser.name}</option>
                                         {users.filter(u => u.id !== currentUser.id).map(user => (
@@ -53,13 +55,16 @@ const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange,
                                 </div>
                             )}
                             <div className="text-white font-semibold">{currentUser.name}</div>
-                            <button onClick={onLogout} className="p-2 text-white hover:bg-brand-secondary rounded-full transition-colors" aria-label="Logout">
+                             <button onClick={onThemeToggle} className="p-2 text-white hover:bg-brand-secondary dark:hover:bg-gray-700 rounded-full transition-colors" aria-label="Toggle theme">
+                                {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
+                            </button>
+                            <button onClick={onLogout} className="p-2 text-white hover:bg-brand-secondary dark:hover:bg-gray-700 rounded-full transition-colors" aria-label="Logout">
                                 <LogoutIcon className="w-6 h-6" />
                             </button>
                         </div>
                     </div>
                 </div>
-                <nav className="bg-white shadow-md">
+                <nav className="bg-white dark:bg-gray-800 shadow-md">
                      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-start space-x-2">
                              {tabs.map(tab => {
@@ -73,8 +78,8 @@ const Layout: React.FC<LayoutProps> = ({ children, tabs, activeTab, onTabChange,
                                         onClick={() => onTabChange(tab.id)}
                                         className={`flex items-center px-4 py-3 text-sm font-medium border-b-4 transition-colors duration-200 ease-in-out
                                             ${activeTab === tab.id
-                                                ? 'border-brand-primary text-brand-primary'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                                ? 'border-brand-primary text-brand-primary dark:border-brand-accent dark:text-brand-accent'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
                                             }`}
                                     >
                                         {ICONS[tab.id]}

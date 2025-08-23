@@ -143,10 +143,10 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
         <div className="relative min-h-[500px] overflow-y-auto">
             <div className="grid grid-cols-7 absolute inset-0">
                 {calendarDays.map(day => (
-                    <div key={day.toISOString()} className="border-r border-gray-200"></div>
+                    <div key={day.toISOString()} className="border-r border-gray-200 dark:border-gray-700"></div>
                 ))}
                 {loading ? (
-                    <div className="col-span-7 flex items-center justify-center h-full text-gray-500">Loading reservations...</div>
+                    <div className="col-span-7 flex items-center justify-center h-full text-gray-500 dark:text-gray-400">Loading reservations...</div>
                 ) : (
                     filteredReservations.map((res, index) => {
                         const { eq, tech, companyName } = getReservationDetails(res);
@@ -211,8 +211,8 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
 
 
                 return (
-                    <div key={index} className={`min-h-[6rem] p-1 border-t border-l border-gray-200 ${!isCurrentMonth ? 'bg-gray-50' : 'bg-white'}`}>
-                        <span className={`text-sm font-semibold ${isCurrentMonth ? 'text-gray-800' : 'text-gray-400'}`}>{formatDate(day, 'day')}</span>
+                    <div key={index} className={`min-h-[6rem] p-1 border-t border-l border-gray-200 dark:border-gray-700 ${!isCurrentMonth ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-white dark:bg-gray-800'}`}>
+                        <span className={`text-sm font-semibold ${isCurrentMonth ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'}`}>{formatDate(day, 'day')}</span>
                         <div className="mt-1 space-y-1 overflow-hidden">
                             {Object.entries(reservationsByTech).map(([techId, techReservations]) => {
                                 const tech = technicians.find(t => t.id === techId);
@@ -238,27 +238,27 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
     );
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-xl">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
             {hoveredData && ReactDOM.createPortal(
                 <div 
                     style={{ top: `${hoveredData.position.y + 10}px`, left: `${hoveredData.position.x}px` }} 
-                    className="absolute z-50 p-3 bg-white rounded-lg shadow-xl border border-gray-200 max-w-sm text-sm"
+                    className="absolute z-50 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-w-sm text-sm"
                 >
-                    <p className="font-bold text-gray-900 mb-2">
+                    <p className="font-bold text-gray-900 dark:text-gray-100 mb-2">
                         {technicians.find(t => t.id === hoveredData.reservations[0].technicianId)?.name}
                     </p>
-                    <div className="space-y-2 border-t pt-2 max-h-60 overflow-y-auto">
+                    <div className="space-y-2 border-t dark:border-gray-600 pt-2 max-h-60 overflow-y-auto">
                         {hoveredData.reservations.map(res => {
                             const { eq, companyName } = getReservationDetails(res);
                             return (
-                                <div key={res.id} className="border-b pb-1 last:border-b-0 last:pb-0">
-                                    <p className="font-semibold text-gray-800">{eq?.description || 'N/A'}</p>
-                                    <p className="text-xs text-gray-500 mb-1">Gage ID: {eq?.gageId || 'N/A'}</p>
-                                    <p className="text-xs text-gray-600">For: {companyName}</p>
-                                    <p className="text-xs text-gray-600">
+                                <div key={res.id} className="border-b dark:border-gray-700 pb-1 last:border-b-0 last:pb-0">
+                                    <p className="font-semibold text-gray-800 dark:text-gray-200">{eq?.description || 'N/A'}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gage ID: {eq?.gageId || 'N/A'}</p>
+                                    <p className="text-xs text-gray-600 dark:text-gray-300">For: {companyName}</p>
+                                    <p className="text-xs text-gray-600 dark:text-gray-300">
                                         Reservation: {new Date(res.pickupDate + 'T00:00:00').toLocaleDateString()} - {new Date(res.returnDate + 'T00:00:00').toLocaleDateString()}
                                     </p>
-                                    {res.notes && <p className="text-xs italic mt-1 text-gray-700">Note: "{res.notes}"</p>}
+                                    {res.notes && <p className="text-xs italic mt-1 text-gray-700 dark:text-gray-400">Note: "{res.notes}"</p>}
                                 </div>
                             )
                         })}
@@ -267,7 +267,7 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                 document.body
             )}
             <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                     {formatDate(currentDate, 'month-year')}
                 </h2>
                 <div className="flex items-center space-x-2 flex-wrap">
@@ -276,7 +276,7 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                             id="tech-filter"
                             value={filterTechId}
                             onChange={e => setFilterTechId(e.target.value)}
-                            className="bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent text-gray-900"
+                            className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent text-gray-900 dark:text-gray-200"
                         >
                             <option value="all">All Technicians</option>
                             {technicians.filter(t => t.role === UserRole.TECHNICIAN).map(tech => (
@@ -286,31 +286,31 @@ const CalendarView: React.FC<{ currentUser: User, onDayClick: (date: string) => 
                     </div>
 
                     <div className="flex items-center space-x-2">
-                         <button onClick={() => changePeriod('prev')} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                            <ChevronLeftIcon className="w-6 h-6 text-gray-600" />
+                         <button onClick={() => changePeriod('prev')} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                            <ChevronLeftIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                         </button>
-                        <button onClick={() => setCurrentDate(new Date())} className="px-4 py-2 text-sm font-semibold text-brand-primary border border-brand-accent rounded-md hover:bg-brand-light transition-colors">
+                        <button onClick={() => setCurrentDate(new Date())} className="px-4 py-2 text-sm font-semibold text-brand-primary border border-brand-accent rounded-md hover:bg-brand-light dark:text-brand-accent dark:hover:bg-gray-700 transition-colors">
                             Today
                         </button>
-                        <button onClick={() => changePeriod('next')} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                            <ChevronRightIcon className="w-6 h-6 text-gray-600" />
+                        <button onClick={() => changePeriod('next')} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                            <ChevronRightIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                         </button>
                     </div>
 
-                    <div className="ml-0 md:ml-4 md:border-l md:pl-4">
-                        <div className="flex rounded-md border border-gray-300">
-                            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-sm font-semibold rounded-l-md ${viewMode === 'week' ? 'bg-brand-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>Week</button>
-                            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-sm font-semibold rounded-r-md ${viewMode === 'month' ? 'bg-brand-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>Month</button>
+                    <div className="ml-0 md:ml-4 md:border-l md:dark:border-gray-600 md:pl-4">
+                        <div className="flex rounded-md border border-gray-300 dark:border-gray-600">
+                            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-sm font-semibold rounded-l-md ${viewMode === 'week' ? 'bg-brand-primary text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}>Week</button>
+                            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-sm font-semibold rounded-r-md ${viewMode === 'month' ? 'bg-brand-primary text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}>Month</button>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div className={`grid grid-cols-7 border-t border-l border-gray-200 ${viewMode === 'week' ? '' : 'border-b'}`}>
+            <div className={`grid grid-cols-7 border-t border-l border-gray-200 dark:border-gray-700 ${viewMode === 'week' ? '' : 'border-b'}`}>
                 {weekDayHeaders.map((day, index) => (
-                    <div key={day} className="text-center py-3 border-r border-b border-gray-200 bg-gray-50">
-                        <p className="text-sm font-semibold text-gray-500">{day}</p>
-                        {viewMode === 'week' && <p className="text-2xl font-bold text-gray-800">{calendarDays[index] ? formatDate(calendarDays[index], 'day') : ''}</p>}
+                    <div key={day} className="text-center py-3 border-r border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{day}</p>
+                        {viewMode === 'week' && <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{calendarDays[index] ? formatDate(calendarDays[index], 'day') : ''}</p>}
                     </div>
                 ))}
             </div>
